@@ -1,2 +1,3 @@
 .sfdx/
+.cache/
 node_modules/
