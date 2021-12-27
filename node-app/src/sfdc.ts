@@ -1,19 +1,20 @@
-import url from 'node:url';
-import path from 'node:path';
-import fs from 'node:fs/promises';
-import child_process from 'node:child_process';
+import * as url from 'node:url';
+import * as path from 'node:path';
+import * as fs from 'node:fs/promises';
+import * as child_process from 'node:child_process';
 
 import { fetch } from 'undici';
 
-const API_VERSION = 'v53.0';
-const ENTITIES = [
-    'Account',
-    'User',
-    'Lead',
-    'Opportunity'
-]
+import { DescribeSObjectResult } from './types/describe-sobject';
 
-function getCredentials() {
+const API_VERSION = 'v53.0';
+
+interface Credentials {
+    accessToken: string;
+    instanceUrl: string;
+}
+
+export function getCredentials(): Credentials {
     if (process.env.INSTANCE_URL && process.env.ACCESS_TOKEN) {
         return {
             accessToken: process.env.ACCESS_TOKEN,
@@ -24,6 +25,7 @@ function getCredentials() {
 
         const output = child_process.execSync('sfdx force:user:display --json', {
             cwd: path.dirname(url.fileURLToPath(import.meta.url)),
+            encoding: 'utf-8',
         });
 
         const { accessToken, instanceUrl } = JSON.parse(output).result;
@@ -38,25 +40,17 @@ function getCredentials() {
     }
 }
 
-/**
- * @param {String} str A random string
- * @returns A file name safely encoded
- */
-function safeFileName(str) {
-    return str.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-}
-
-class Connection {
+export class Connection {
     #instanceUrl;
     #accessToken;
     #cacheDir = path.resolve(url.fileURLToPath(import.meta.url), '../.cache');
 
-    constructor({ instanceUrl, accessToken }) {
+    constructor({ instanceUrl, accessToken }: Credentials) {
         this.#instanceUrl = instanceUrl;
         this.#accessToken = accessToken;
     }
 
-    async fetch(endpoint) {
+    async fetch(endpoint: string) {
         const cache = path.resolve(this.#cacheDir, `${safeFileName(endpoint)}.json`);
 
         let txt;
@@ -80,7 +74,7 @@ class Connection {
         }
     }
 
-    async #fetch(endpoint) {
+    async #fetch(endpoint: string) {
         const response = await fetch(this.#instanceUrl + endpoint, {
             headers: {
                 Authorization: `Bearer ${this.#accessToken}`,
@@ -102,20 +96,13 @@ class Connection {
     }
 }
 
-/**
- * Use the sObject Describe resource to retrieve all the metadata for an object, including
- * information about each field, URLs, and child relationships.
- * https://developer.salesforce.com/docs/atlas.en-us.api_rest.meta/api_rest/dome_sobject_describe.htm
- *
- * @param {String} name
- * @param {Connection} conn
- * @returns The metadata associated with SObject
- */
-async function describeSObject(name, conn) {
-    return conn.fetch(`/services/data/${API_VERSION}/sobjects/${name}/describe/`);
+function safeFileName(str: string): string {
+    return str.replace(/[^a-z0-9]/gi, '_').toLowerCase();
 }
 
-const credentials = getCredentials();
-const conn = new Connection(credentials);
-
-await Promise.allSettled(ENTITIES.map(entity => describeSObject(entity, conn)));
+export async function describeSObject(
+    name: string,
+    conn: Connection,
+): Promise<DescribeSObjectResult> {
+    return conn.fetch(`/services/data/${API_VERSION}/sobjects/${name}/describe/`);
+}

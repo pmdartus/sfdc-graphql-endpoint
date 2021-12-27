@@ -1,3 +1,5 @@
 .sfdx/
 .cache/
+
 node_modules/
+dist/
