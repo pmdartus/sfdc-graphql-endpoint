@@ -14,136 +14,120 @@ import {
     GraphQLString,
 } from 'graphql';
 
-import { DescribeSObjectResult, SObjectField } from './types/describe-sobject';
+import { Graph } from './graph';
+import { Entity, Field } from './entity';
 
-function toGraphQLFieldName(str: string): string {
-    return str[0].toLowerCase() + str.slice(1);
-}
-
-function toGraphQLEnumFieldName(str: string): string {
-    return str.toUpperCase().replace(/[^_a-zA-Z0-9]/g, '_');
-}
+const BUILTIN_SCALAR_TYPES = {
+    id: GraphQLID,
+    string: GraphQLString,
+    boolean: GraphQLBoolean,
+    int: GraphQLInt,
+    double: GraphQLFloat,
+    date: new GraphQLScalarType({ name: 'Date' }),
+    datetime: new GraphQLScalarType({ name: 'DateTime' }),
+    base64: new GraphQLScalarType({ name: 'Base64' }),
+    currency: new GraphQLScalarType({ name: 'Currency' }),
+    textarea: new GraphQLScalarType({ name: 'TextArea' }),
+    percent: new GraphQLScalarType({ name: 'Percent' }),
+    phone: new GraphQLScalarType({ name: 'Phone' }),
+    url: new GraphQLScalarType({ name: 'URL' }),
+    email: new GraphQLScalarType({ name: 'Email' }),
+    combobox: new GraphQLScalarType({ name: 'Combobox' }),
+    anyType: new GraphQLScalarType({ name: 'AnyType' }),
+    
+    picklist: GraphQLString,
+    multipicklist: new GraphQLList(GraphQLString)
+};
 
 export class SchemaBuilder {
-    sObjects: Map<string, DescribeSObjectResult>;
-    graphQLTypes: Map<string, GraphQLObjectType>;
-    graphQLScalars: Map<string, GraphQLScalarType>;
+    graph: Graph;
+    graphQLTypes: Map<string, GraphQLObjectType> = new Map();
+    graphQLScalars: Map<string, GraphQLScalarType> = new Map();
 
-    constructor(sObjects: DescribeSObjectResult[]) {
-        this.sObjects = new Map(sObjects.map((sObject) => [sObject.name, sObject]));
-        this.graphQLTypes = new Map();
-        this.graphQLScalars = new Map();
+    constructor(graph: Graph) {
+        this.graph = graph;
     }
 
     buildSchema(): GraphQLSchema {
-        this.#buildTypes();
+        const types = this.#buildTypes();
         const query = this.#buildQuery();
-        const mutation = this.#buildMutation();
 
         return new GraphQLSchema({
-            types: Array.from(this.graphQLTypes.values()),
+            types: Array.from(types.values()),
             query,
-            // mutation,
         });
     }
 
-    #buildTypes() {
-        for (const sObject of this.sObjects.values()) {
-            const { name } = sObject;
+    #buildTypes(): Map<string, GraphQLObjectType> {
+        const entries = this.graph.entities.map((entity) => {
+            const { gqlName, fields } = entity;
 
-            const graphQLType = new GraphQLObjectType({
-                name,
+            return new GraphQLObjectType({
+                name: gqlName,
                 fields: () => {
                     return Object.fromEntries(
-                        sObject.fields.map((sObjectField) => {
-                            const { name, config } = this.#sObjectFieldTypeToGraphQLType(
-                                sObject,
-                                sObjectField,
-                            );
-                            return [name, config];
+                        fields.map((field) => {
+                            const config = this.#buildField(entity, field);
+                            return [field.gqlName, config];
                         }),
                     );
                 },
             });
+        });
 
-            this.graphQLTypes.set(name, graphQLType);
-        }
+        const types = (this.graphQLTypes = new Map(entries.map((entry) => [entry.name, entry])));
+        return types;
     }
 
     #buildQuery(): GraphQLObjectType {
-        const queriesById = Array.from(this.graphQLTypes.values()).map(
-            (graphQLType): [string, GraphQLFieldConfig<any, any>] => {
-                return [
-                    `${toGraphQLFieldName(graphQLType.name)}_by_id`,
-                    {
-                        type: graphQLType,
+        return new GraphQLObjectType({
+            name: 'Query',
+            fields: () => {
+                const queries: Record<string, GraphQLFieldConfig<any, any>> = {};
+
+                for (const entity of this.graph.entities) {
+                    if (!entity.config.queryable) {
+                        continue;
+                    }
+
+                    const gqlEntityType = this.graphQLTypes.get(entity.gqlName)!;
+
+                    queries[`${entity.gqlName}_by_id`] = {
+                        type: gqlEntityType,
                         args: {
                             id: {
                                 type: GraphQLID,
                             },
                         },
-                    },
-                ];
-            },
-        );
+                    };
 
-        const queryFilter = Array.from(this.graphQLTypes.values()).map(
-            (graphQLType): [string, GraphQLFieldConfig<any, any>] => {
-                return [
-                    toGraphQLFieldName(graphQLType.name),
-                    {
-                        type: new GraphQLList(graphQLType),
+                    queries[entity.gqlName] = {
+                        type: new GraphQLList(gqlEntityType),
                         args: {
                             limit: {
                                 type: new GraphQLNonNull(GraphQLInt),
                             },
                             offset: {
                                 type: GraphQLInt,
-                            }
+                            },
                         },
-                    },
-                ];
+                    };
+                }
+
+                return queries;
             },
-        );
-
-        return new GraphQLObjectType({
-            name: 'Query',
-            fields: Object.fromEntries([...queriesById, ...queryFilter]),
         });
     }
 
-    #buildMutation(): GraphQLObjectType {
-        return new GraphQLObjectType({
-            name: 'Mutation',
-            fields: {}
-        });
-    }
-
-    #sObjectFieldTypeToGraphQLType(
-        sObject: DescribeSObjectResult,
-        sObjectField: SObjectField,
-    ): { name: string; config: GraphQLFieldConfig<any, any> } {
-        let name = toGraphQLFieldName(sObjectField.name);
+    #buildField(entity: Entity, field: Field): GraphQLFieldConfig<any, any> {
         let type: GraphQLOutputType;
 
-        switch (sObjectField.type) {
+        switch (field.type) {
             case 'id':
-                type = GraphQLID;
-                break;
-
             case 'string':
-                type = GraphQLString;
-                break;
             case 'boolean':
-                type = GraphQLBoolean;
-                break;
             case 'int':
-                type = GraphQLInt;
-                break;
             case 'double':
-                type = GraphQLFloat;
-                break;
-
             case 'date':
             case 'datetime':
             case 'base64':
@@ -155,71 +139,31 @@ export class SchemaBuilder {
             case 'email':
             case 'combobox':
             case 'anyType':
-            case 'address':
-            case 'location':
+            case 'picklist':
+            case 'multipicklist':
                 {
-                    const scalarName =
-                        sObjectField.type[0].toUpperCase() + sObjectField.type.slice(1);
-
-                    if (!this.graphQLScalars.has(scalarName)) {
-                        type = new GraphQLScalarType({ name: scalarName });
-                        this.graphQLScalars.set(scalarName, type);
-                    } else {
-                        type = this.graphQLScalars.get(scalarName)!;
-                    }
+                    type = BUILTIN_SCALAR_TYPES[field.type];
                 }
                 break;
-
-            case 'picklist':
-            case 'multipicklist': {
-                const values = Object.fromEntries(
-                    sObjectField.picklistValues.map((picklistValue) => {
-                        return [
-                            toGraphQLEnumFieldName(picklistValue.label),
-                            {
-                                value: picklistValue.value,
-                            },
-                        ];
-                    }),
-                );
-
-                type = new GraphQLEnumType({
-                    name: `${sObject.name}_${sObjectField.name}`,
-                    values,
-                });
-                break;
-            }
 
             case 'reference': {
-                const { referenceTo } = sObjectField;
+                const { referenceTo } = field;
 
-                if (referenceTo.length === 1 && this.graphQLTypes.has(referenceTo[0])) {
-                    type = this.graphQLTypes.get(referenceTo[0])!;
+                if (referenceTo.length === 1 && this.graph.entityBySfdcName(referenceTo[0])) {
+                    const referencedEntity = this.graph.entityBySfdcName(referenceTo[0])!;
+                    type = this.graphQLTypes.get(referencedEntity.gqlName)!;
                 } else {
                     type = GraphQLID;
-                }
-
-                if (name.endsWith('Id')) {
-                    name = name.slice(0, -2);
                 }
             }
         }
 
-        if (!sObjectField.nillable) {
+        if (!field.config.nillable) {
             type = new GraphQLNonNull(type);
         }
 
         return {
-            name,
-            config: {
-                type,
-            },
+            type
         };
-    }
-
-    static build(sObjects: DescribeSObjectResult[]) {
-        const schemaBuilder = new SchemaBuilder(sObjects);
-
-        return schemaBuilder.buildSchema();
     }
 }
