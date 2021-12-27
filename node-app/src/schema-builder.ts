@@ -12,7 +12,6 @@ import {
     GraphQLScalarType,
     GraphQLSchema,
     GraphQLString,
-    GraphQLUnionType,
 } from 'graphql';
 
 import { DescribeSObjectResult, SObjectField } from './types/describe-sobject';
@@ -37,6 +36,18 @@ export class SchemaBuilder {
     }
 
     buildSchema(): GraphQLSchema {
+        this.#buildTypes();
+        const query = this.#buildQuery();
+        const mutation = this.#buildMutation();
+
+        return new GraphQLSchema({
+            types: Array.from(this.graphQLTypes.values()),
+            query,
+            // mutation,
+        });
+    }
+
+    #buildTypes() {
         for (const sObject of this.sObjects.values()) {
             const { name } = sObject;
 
@@ -45,7 +56,7 @@ export class SchemaBuilder {
                 fields: () => {
                     return Object.fromEntries(
                         sObject.fields.map((sObjectField) => {
-                            const { name, config } = this.sObjectFieldTypeToGraphQLType(
+                            const { name, config } = this.#sObjectFieldTypeToGraphQLType(
                                 sObject,
                                 sObjectField,
                             );
@@ -57,7 +68,9 @@ export class SchemaBuilder {
 
             this.graphQLTypes.set(name, graphQLType);
         }
+    }
 
+    #buildQuery(): GraphQLObjectType {
         const queriesById = Array.from(this.graphQLTypes.values()).map(
             (graphQLType): [string, GraphQLFieldConfig<any, any>] => {
                 return [
@@ -82,11 +95,10 @@ export class SchemaBuilder {
                         type: new GraphQLList(graphQLType),
                         args: {
                             limit: {
-                                type: GraphQLInt,
+                                type: new GraphQLNonNull(GraphQLInt),
                             },
                             offset: {
                                 type: GraphQLInt,
-                                defaultValue: 0,
                             }
                         },
                     },
@@ -94,18 +106,20 @@ export class SchemaBuilder {
             },
         );
 
-        const query = new GraphQLObjectType({
+        return new GraphQLObjectType({
             name: 'Query',
             fields: Object.fromEntries([...queriesById, ...queryFilter]),
         });
+    }
 
-        return new GraphQLSchema({
-            types: Array.from(this.graphQLTypes.values()),
-            query,
+    #buildMutation(): GraphQLObjectType {
+        return new GraphQLObjectType({
+            name: 'Mutation',
+            fields: {}
         });
     }
 
-    sObjectFieldTypeToGraphQLType(
+    #sObjectFieldTypeToGraphQLType(
         sObject: DescribeSObjectResult,
         sObjectField: SObjectField,
     ): { name: string; config: GraphQLFieldConfig<any, any> } {

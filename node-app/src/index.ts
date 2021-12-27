@@ -1,4 +1,4 @@
-import { printSchema } from 'graphql';
+import { printSchema, assertValidSchema } from 'graphql';
 
 import { getCredentials, Connection, describeSObject } from './sfdc.js';
 import { SchemaBuilder } from './schema-builder.js';
@@ -10,4 +10,5 @@ const conn = new Connection(credentials);
 
 const sobject = await Promise.all(ENTITIES.map((entity) => describeSObject(entity, conn)));
 const schema = SchemaBuilder.build(sobject);
+assertValidSchema(schema);
 console.log(printSchema(schema));
