@@ -1,4 +1,5 @@
 import {
+    assertObjectType,
     GraphQLBoolean,
     GraphQLEnumType,
     GraphQLFieldConfig,
@@ -12,10 +13,22 @@ import {
     GraphQLScalarType,
     GraphQLSchema,
     GraphQLString,
+    isObjectType,
+    Kind,
 } from 'graphql';
 
 import { Graph } from './graph';
 import { Entity, Field } from './entity';
+
+declare module 'graphql' {
+    interface GraphQLObjectTypeExtensions {
+        sfdc?: Entity
+    }
+
+    interface GraphQLFieldExtensions<_TSource, _TContext, _TArgs = any> {
+        sfdc?: Field
+    }
+}
 
 const BUILTIN_SCALAR_TYPES = {
     id: GraphQLID,
@@ -72,6 +85,9 @@ export class SchemaBuilder {
                         }),
                     );
                 },
+                extensions: {
+                    sfdc: entity
+                }
             });
         });
 
@@ -99,6 +115,34 @@ export class SchemaBuilder {
                                 type: GraphQLID,
                             },
                         },
+                        resolve(source, args, context, info) {
+                            const type = assertObjectType(info.returnType);
+
+                            const fields = info.fieldNodes[0].selectionSet?.selections.map(selectionNode => {
+                                if (selectionNode.kind === Kind.FIELD) {
+                                    const gqlName = selectionNode.name.value;
+                                    return type.getFields()[gqlName].extensions.sfdc!.sfdcName;
+                                }
+                            }) ?? [];
+
+                            const sfdcEntityName = type.extensions.sfdc!.sfdcName;
+
+                            const query = `SELECT ${fields.join(', ')} FROM ${sfdcEntityName}`;
+
+                            console.log(query)
+
+                            // for (const field of info.fieldNodes) {
+                                
+                            //     console.log('!!!!', field.name, field.selectionSet?.selections);
+                            //     if (isObjectType(info.returnType)) {
+                            //         console.log(info.returnType.getFields());
+
+                            //     }
+                            // }
+                        },
+                        extensions: {
+                            // sfdc: entity
+                        },
                     };
 
                     queries[entity.gqlName] = {
@@ -110,6 +154,9 @@ export class SchemaBuilder {
                             offset: {
                                 type: GraphQLInt,
                             },
+                        },
+                        extensions: {
+                            // sfdc: entity
                         },
                     };
                 }
@@ -163,7 +210,10 @@ export class SchemaBuilder {
         }
 
         return {
-            type
+            type,
+            extensions: {
+                sfdc: field
+            }
         };
     }
 }

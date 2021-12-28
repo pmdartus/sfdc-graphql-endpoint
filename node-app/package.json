@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "fastify": "^3.25.2",
     "graphql": "^16.2.0",
     "undici": "^4.12.1"
   },
