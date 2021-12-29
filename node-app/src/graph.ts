@@ -1,7 +1,5 @@
-import { GraphQLSchema } from "graphql";
-
 import { createEntity, Entity } from "./entity.js";
-import { DescribeSObjectResult } from "./types/describe-sobject.js";
+import { DescribeSObjectResult } from "./sfdc/types/describe-sobject.js";
 
 export class Graph {
     readonly entities: Entity[];

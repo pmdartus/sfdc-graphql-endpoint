@@ -2,10 +2,13 @@ import * as graphql from 'graphql';
 import { GraphQLSchema, Source, DocumentNode } from 'graphql';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
-import { getCredentials, Connection, describeSObject } from '../sfdc.js';
 import { SchemaBuilder } from '../schema-builder.js';
 import { Graph } from '../graph.js';
+
 import { LRU } from '../utils/lru.js';
+
+import { Connection } from '../sfdc/connection.js';
+import { describeSObject } from '../sfdc/api.js';
 
 const ENTITIES = ['Account', 'User', 'Lead', 'Opportunity'];
 
@@ -24,6 +27,8 @@ interface GraphQLParams {
 export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
     let schema: GraphQLSchema | undefined;
     const queryCache = new LRU<string, DocumentNode>(100);
+
+    let sfdcConnection = await Connection.getConnection();
 
     fastify.get<{
         Params: GraphQLQueryString;
@@ -63,7 +68,7 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
 
         if (!schema) {
             request.log.info('Fetching graphQL schema');
-            schema = await getSchema();
+            schema = await buildSchema(sfdcConnection);
         }
 
         if (!query) {
@@ -108,11 +113,10 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
     }
 }
 
-async function getSchema(): Promise<GraphQLSchema> {
-    const credentials = getCredentials();
-    const conn = new Connection(credentials);
-
-    const sObjects = await Promise.all(ENTITIES.map((entity) => describeSObject(entity, conn)));
+async function buildSchema(connection: Connection): Promise<GraphQLSchema> {
+    const sObjects = await Promise.all(
+        ENTITIES.map((entity) => describeSObject(connection, entity)),
+    );
 
     const graph = new Graph(sObjects);
     const schemaBuilder = new SchemaBuilder(graph);

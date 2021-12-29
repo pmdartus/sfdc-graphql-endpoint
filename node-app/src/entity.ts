@@ -1,4 +1,4 @@
-import { DescribeSObjectResult, SObjectField, SObjectFieldType } from './types/describe-sobject';
+import { DescribeSObjectResult, SObjectField, SObjectFieldType } from './sfdc/types/describe-sobject';
 
 export interface Entity {
     sfdcName: string;
