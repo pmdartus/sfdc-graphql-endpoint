@@ -7,7 +7,7 @@ export interface Entity {
     config: EntityConfig;
 }
 
-interface EntityConfig {
+export interface EntityConfig {
     createable: boolean;
     updateable: boolean;
     deletable: boolean;
@@ -21,7 +21,7 @@ interface BaseField<T extends SObjectFieldType> {
     config: FieldConfig;
 }
 
-interface FieldConfig {
+export interface FieldConfig {
     nillable: boolean;
     createable: boolean;
     updatable: boolean;
@@ -32,16 +32,17 @@ interface FieldConfig {
     aggregatable: boolean;
 }
 
-interface ReferenceField extends BaseField<'reference'> {
+export interface ReferenceField extends BaseField<'reference'> {
+    sfdcRelationshipName: string;
     referenceTo: string[];
 }
-interface PickList extends BaseField<'picklist'> {
+export interface PickList extends BaseField<'picklist'> {
     values: string[];
 }
-interface MultiPickList extends BaseField<'multipicklist'> {
+export interface MultiPickList extends BaseField<'multipicklist'> {
     values: string[];
 }
-interface Combobox extends BaseField<'combobox'> {
+export interface Combobox extends BaseField<'combobox'> {
     values: string[];
 }
 
@@ -69,13 +70,8 @@ export type Field =
     | Combobox;
 
 function gqlFieldName(sObjectField: SObjectField): string {
-    let name = sObjectField.name[0].toLowerCase() + sObjectField.name.slice(1);
-
-    if (sObjectField.type === 'reference' && name.endsWith('Id')) {
-        name = name.slice(0, -2);
-    }
-
-    return name;
+    const name = sObjectField.relationshipName ?? sObjectField.name;
+    return name[0].toLowerCase() + name.slice(1);
 }
 
 function createField(sObjectField: SObjectField): Field | undefined {
@@ -113,24 +109,25 @@ function createField(sObjectField: SObjectField): Field | undefined {
         case 'email':
         case 'anyType':
             return {
-                type,
                 ...baseField,
+                type,
             };
 
         case 'reference':
             return {
+                ...baseField,
                 type,
                 referenceTo: sObjectField.referenceTo,
-                ...baseField,
+                sfdcRelationshipName: sObjectField.relationshipName!,
             };
 
         case 'combobox':
         case 'picklist':
         case 'multipicklist':
             return {
+                ...baseField,
                 type,
                 values: sObjectField.picklistValues.map((entry) => entry.value),
-                ...baseField,
             };
     }
 }

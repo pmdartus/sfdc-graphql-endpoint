@@ -15,18 +15,19 @@ import {
     Kind,
 } from 'graphql';
 
-import { Graph } from './graph';
-import { Entity, Field } from './entity';
+import { Graph } from './graph.js';
+import { Entity, Field } from './entity.js';
+import { resolveInfoToSoqlQuery, soqlQueryMappingToString, soqlResultToGraphQLOutput } from './soql.js';
 
-import { Api } from './sfdc/api';
+import { Api } from './sfdc/api.js';
 import { Connection } from './sfdc/connection.js';
 
-import { Logger } from './utils/logger';
+import { Logger } from './utils/logger.js';
 
 interface ResolverContext {
     connection: Connection;
     api: Api;
-    logger: Logger
+    logger: Logger;
 }
 
 interface QuerySingleArgs {
@@ -141,38 +142,19 @@ export class SchemaBuilder {
                             },
                         },
                         async resolve(source, args, context, info) {
-                            const rootField = info.fieldNodes[0];
-
-                            const soqlEntityName = entity.sfdcName;
-                            const soqlFields = [];
-
-                            for (const selection of rootField.selectionSet!.selections) {
-                                if (selection.kind === Kind.FIELD) {
-                                    const entityFields = gqlEntityType.getFields();
-                                    const entityField = entityFields[selection.name.value];
-
-                                    const sfdcFieldName = entityField.extensions.sfdc!.sfdcName;
-                                    soqlFields.push(sfdcFieldName);
-                                }
-                            }
-
-                            let query = `SELECT ${soqlFields.join(
-                                ', ',
-                            )} FROM ${soqlEntityName} LIMIT ${args.limit}`;
-                            if (args.offset) {
-                                query += ` OFFSET ${args.offset}`;
-                            }
+                            const soqlMapping = resolveInfoToSoqlQuery(info, gqlEntityType, args);
+                            const query = soqlQueryMappingToString(soqlMapping);
 
                             context.logger.debug(`Execute SOQL: ${query}`);
 
                             const result = await context.api.executeSOQL(query);
-                            return result.records.map(r => {
-                                return {
-                                    id: r.Id,
-                                    name: r.Name,
-                                    foo: "adwda"
-                                }
-                            })
+                            console.log(JSON.stringify(result, null, 4));
+
+                            const res = soqlResultToGraphQLOutput(soqlMapping, result);
+
+                            console.log(res);
+
+                            return res;
                         },
                     };
 
@@ -191,6 +173,8 @@ export class SchemaBuilder {
                             const { api } = context;
 
                             const type = assertObjectType(info.returnType);
+
+                            console.log(info.fieldNodes[0])
 
                             const fields =
                                 info.fieldNodes[0].selectionSet?.selections.map((selectionNode) => {
