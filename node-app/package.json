@@ -15,6 +15,7 @@
   "license": "ISC",
   "dependencies": {
     "fastify": "^3.25.2",
+    "fastify-plugin": "^3.0.0",
     "graphql": "^16.2.0",
     "undici": "^4.12.1"
   },

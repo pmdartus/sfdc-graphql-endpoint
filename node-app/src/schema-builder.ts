@@ -1,7 +1,6 @@
 import {
     assertObjectType,
     GraphQLBoolean,
-    GraphQLEnumType,
     GraphQLFieldConfig,
     GraphQLFloat,
     GraphQLID,
@@ -13,20 +12,39 @@ import {
     GraphQLScalarType,
     GraphQLSchema,
     GraphQLString,
-    isObjectType,
     Kind,
 } from 'graphql';
 
 import { Graph } from './graph';
 import { Entity, Field } from './entity';
 
+import { Api } from './sfdc/api';
+import { Connection } from './sfdc/connection.js';
+
+import { Logger } from './utils/logger';
+
+interface ResolverContext {
+    connection: Connection;
+    api: Api;
+    logger: Logger
+}
+
+interface QuerySingleArgs {
+    id: string;
+}
+
+interface QueryListArgs {
+    limit: number;
+    offset?: number;
+}
+
 declare module 'graphql' {
     interface GraphQLObjectTypeExtensions {
-        sfdc?: Entity
+        sfdc?: Entity;
     }
 
     interface GraphQLFieldExtensions<_TSource, _TContext, _TArgs = any> {
-        sfdc?: Field
+        sfdc?: Field;
     }
 }
 
@@ -47,9 +65,9 @@ const BUILTIN_SCALAR_TYPES = {
     email: new GraphQLScalarType({ name: 'Email' }),
     combobox: new GraphQLScalarType({ name: 'Combobox' }),
     anyType: new GraphQLScalarType({ name: 'AnyType' }),
-    
+
     picklist: GraphQLString,
-    multipicklist: new GraphQLList(GraphQLString)
+    multipicklist: new GraphQLList(GraphQLString),
 };
 
 export class SchemaBuilder {
@@ -86,8 +104,8 @@ export class SchemaBuilder {
                     );
                 },
                 extensions: {
-                    sfdc: entity
-                }
+                    sfdc: entity,
+                },
             });
         });
 
@@ -99,7 +117,7 @@ export class SchemaBuilder {
         return new GraphQLObjectType({
             name: 'Query',
             fields: () => {
-                const queries: Record<string, GraphQLFieldConfig<any, any>> = {};
+                const queries: Record<string, GraphQLFieldConfig<undefined, ResolverContext>> = {};
 
                 for (const entity of this.graph.entities) {
                     if (!entity.config.queryable) {
@@ -108,44 +126,11 @@ export class SchemaBuilder {
 
                     const gqlEntityType = this.graphQLTypes.get(entity.gqlName)!;
 
-                    queries[`${entity.gqlName}_by_id`] = {
-                        type: gqlEntityType,
-                        args: {
-                            id: {
-                                type: GraphQLID,
-                            },
-                        },
-                        resolve(source, args, context, info) {
-                            const type = assertObjectType(info.returnType);
-
-                            const fields = info.fieldNodes[0].selectionSet?.selections.map(selectionNode => {
-                                if (selectionNode.kind === Kind.FIELD) {
-                                    const gqlName = selectionNode.name.value;
-                                    return type.getFields()[gqlName].extensions.sfdc!.sfdcName;
-                                }
-                            }) ?? [];
-
-                            const sfdcEntityName = type.extensions.sfdc!.sfdcName;
-
-                            const query = `SELECT ${fields.join(', ')} FROM ${sfdcEntityName}`;
-
-                            console.log(query)
-
-                            // for (const field of info.fieldNodes) {
-                                
-                            //     console.log('!!!!', field.name, field.selectionSet?.selections);
-                            //     if (isObjectType(info.returnType)) {
-                            //         console.log(info.returnType.getFields());
-
-                            //     }
-                            // }
-                        },
-                        extensions: {
-                            // sfdc: entity
-                        },
-                    };
-
-                    queries[entity.gqlName] = {
+                    const queryField: GraphQLFieldConfig<
+                        undefined,
+                        ResolverContext,
+                        QueryListArgs
+                    > = {
                         type: new GraphQLList(gqlEntityType),
                         args: {
                             limit: {
@@ -155,10 +140,89 @@ export class SchemaBuilder {
                                 type: GraphQLInt,
                             },
                         },
-                        extensions: {
-                            // sfdc: entity
+                        async resolve(source, args, context, info) {
+                            const rootField = info.fieldNodes[0];
+
+                            const soqlEntityName = entity.sfdcName;
+                            const soqlFields = [];
+
+                            for (const selection of rootField.selectionSet!.selections) {
+                                if (selection.kind === Kind.FIELD) {
+                                    const entityFields = gqlEntityType.getFields();
+                                    const entityField = entityFields[selection.name.value];
+
+                                    const sfdcFieldName = entityField.extensions.sfdc!.sfdcName;
+                                    soqlFields.push(sfdcFieldName);
+                                }
+                            }
+
+                            let query = `SELECT ${soqlFields.join(
+                                ', ',
+                            )} FROM ${soqlEntityName} LIMIT ${args.limit}`;
+                            if (args.offset) {
+                                query += ` OFFSET ${args.offset}`;
+                            }
+
+                            context.logger.debug(`Execute SOQL: ${query}`);
+
+                            const result = await context.api.executeSOQL(query);
+                            return result.records.map(r => {
+                                return {
+                                    id: r.Id,
+                                    name: r.Name,
+                                    foo: "adwda"
+                                }
+                            })
                         },
                     };
+
+                    const queryByIdField: GraphQLFieldConfig<
+                        undefined,
+                        ResolverContext,
+                        QuerySingleArgs
+                    > = {
+                        type: gqlEntityType,
+                        args: {
+                            id: {
+                                type: GraphQLID,
+                            },
+                        },
+                        async resolve(source, { id }, context, info) {
+                            const { api } = context;
+
+                            const type = assertObjectType(info.returnType);
+
+                            const fields =
+                                info.fieldNodes[0].selectionSet?.selections.map((selectionNode) => {
+                                    if (selectionNode.kind === Kind.FIELD) {
+                                        const gqlName = selectionNode.name.value;
+                                        return type.getFields()[gqlName].extensions.sfdc!.sfdcName;
+                                    }
+                                }) ?? [];
+
+                            const sfdcEntityName = type.extensions.sfdc!.sfdcName;
+
+                            const query = `SELECT ${fields.join(', ')} FROM ${sfdcEntityName}`;
+                            console.log(query);
+
+                            const res = await api.executeSOQL(query);
+                            context.logger.debug(`Execute SOQL: ${query}`);
+
+                            return res;
+
+                            // for (const field of info.fieldNodes) {
+
+                            //     console.log('!!!!', field.name, field.selectionSet?.selections);
+                            //     if (isObjectType(info.returnType)) {
+                            //         console.log(info.returnType.getFields());
+
+                            //     }
+                            // }
+                        },
+                    };
+
+                    queries[entity.gqlName] = queryField;
+                    queries[`${entity.gqlName}_by_id`] = queryByIdField;
                 }
 
                 return queries;
@@ -212,8 +276,8 @@ export class SchemaBuilder {
         return {
             type,
             extensions: {
-                sfdc: field
-            }
+                sfdc: field,
+            },
         };
     }
 }

@@ -1,24 +1,28 @@
-import { Connection } from "./connection";
+import { Connection } from './connection';
 
-import { DescribeSObjectResult } from "./types/describe-sobject";
-import { SOQLResult } from "./types/soql";
+import { DescribeSObjectResult } from './types/describe-sobject';
+import { SOQLResult } from './types/soql';
 
-const API_VERSION = 'v53.0';
+export class Api {
+    #connection: Connection;
+    #version: string;
 
-export async function describeSObject(
-    conn: Connection,
-    sObjectName: string,
-): Promise<DescribeSObjectResult> {
-    return conn.fetch(`/services/data/${API_VERSION}/sobjects/${sObjectName}/describe/`);
-}
+    constructor({ connection, version = 'v53.0' }: { connection: Connection; version?: string }) {
+        this.#connection = connection;
+        this.#version = version;
+    }
 
-export async function executeSOQL(
-    conn: Connection,
-    query: string,
-): Promise<SOQLResult> {
-    return conn.fetch(`/services/data/${API_VERSION}/query/`, {
-        searchParams: {
-            q: query
-        }
-    });
+    async describeSObject(sObjectName: string): Promise<DescribeSObjectResult> {
+        return this.#connection.fetch(
+            `/services/data/${this.#version}/sobjects/${sObjectName}/describe/`,
+        );
+    }
+
+    async executeSOQL(query: string): Promise<SOQLResult> {
+        return this.#connection.fetch(`/services/data/${this.#version}/query/`, {
+            searchParams: {
+                q: query,
+            },
+        });
+    }
 }

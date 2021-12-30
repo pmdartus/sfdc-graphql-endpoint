@@ -29,7 +29,7 @@ export class Connection {
             }
         }
 
-        const response = await fetch(this.#instanceUrl + endpoint, {
+        const response = await fetch(url, {
             headers: {
                 Authorization: `Bearer ${this.#accessToken}`,
             },
@@ -38,11 +38,10 @@ export class Connection {
         const res = await response.json();
 
         if (response.status !== 200) {
-            const message = `Failed to fetch "${endpoint}" (status code ${response.status})`;
+            let message = `Failed to fetch "${url.toString()}" (status code ${response.status})`;
+            message += `Body:\n${JSON.stringify(res)}`;
 
             console.error(message);
-            console.error(`Body:\n${res}`);
-
             throw new Error(message);
         }
 

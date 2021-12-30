@@ -2,7 +2,7 @@ export interface SOQLResult {
     done: boolean;
     totalSize: number;
     nextRecordsUrl?: string;
-    record: SOQLRecord[];
+    records: SOQLRecord[];
 }
 
 export interface SOQLRecord {

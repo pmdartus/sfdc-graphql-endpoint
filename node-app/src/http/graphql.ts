@@ -7,8 +7,9 @@ import { Graph } from '../graph.js';
 
 import { LRU } from '../utils/lru.js';
 
-import { Connection } from '../sfdc/connection.js';
-import { describeSObject } from '../sfdc/api.js';
+import { Api } from '../sfdc/api.js';
+
+import sfdcFastifyPlugin from './sfdc-plugin.js';
 
 const ENTITIES = ['Account', 'User', 'Lead', 'Opportunity'];
 
@@ -28,7 +29,7 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
     let schema: GraphQLSchema | undefined;
     const queryCache = new LRU<string, DocumentNode>(100);
 
-    let sfdcConnection = await Connection.getConnection();
+    fastify.register(sfdcFastifyPlugin);
 
     fastify.get<{
         Params: GraphQLQueryString;
@@ -57,18 +58,21 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
     fastify.post<{
         Body: GraphQLParams;
     }>('/graphql', async (request, response) => {
-        return executeQuery(request, request.body);
+        return executeQuery(request, {
+            ...request.body,
+        });
     });
 
     async function executeQuery(
         request: FastifyRequest,
         params: GraphQLParams,
     ): Promise<graphql.ExecutionResult> {
+        const { api, connection } = fastify.sfdc;
         const { query, variables, operationName } = params;
 
         if (!schema) {
             request.log.info('Fetching graphQL schema');
-            schema = await buildSchema(sfdcConnection);
+            schema = await buildSchema(api);
         }
 
         if (!query) {
@@ -79,11 +83,18 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
             };
         }
 
-        const documentAst = parseAndValidateQuery(schema, query);
+        const queryDocumentAst = parseAndValidateQuery(schema, query);
 
         return graphql.execute({
             schema,
-            document: documentAst,
+            operationName,
+            variableValues: variables,
+            document: queryDocumentAst,
+            contextValue: {
+                api,
+                connection,
+                logger: request.log
+            },
         });
     }
 
@@ -113,10 +124,8 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
     }
 }
 
-async function buildSchema(connection: Connection): Promise<GraphQLSchema> {
-    const sObjects = await Promise.all(
-        ENTITIES.map((entity) => describeSObject(connection, entity)),
-    );
+async function buildSchema(api: Api): Promise<GraphQLSchema> {
+    const sObjects = await Promise.all(ENTITIES.map((entity) => api.describeSObject(entity)));
 
     const graph = new Graph(sObjects);
     const schemaBuilder = new SchemaBuilder(graph);
