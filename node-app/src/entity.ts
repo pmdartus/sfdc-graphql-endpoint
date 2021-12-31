@@ -1,10 +1,24 @@
-import { DescribeSObjectResult, SObjectField, SObjectFieldType } from './sfdc/types/describe-sobject';
+import { camelCase } from './utils/string.js';
+
+import {
+    DescribeSObjectResult,
+    SObjectChildRelationship,
+    SObjectField,
+    SObjectFieldType,
+} from './sfdc/types/describe-sobject.js';
 
 export interface Entity {
     sfdcName: string;
     gqlName: string;
-    fields: Field[];
     config: EntityConfig;
+    fields: Field[];
+    childRelationships: ChildRelationship[];
+}
+
+export interface ChildRelationship {
+    sfdcName: string;
+    gqlName: string;
+    entity: string;
 }
 
 export interface EntityConfig {
@@ -24,29 +38,14 @@ interface BaseField<T extends SObjectFieldType> {
 export interface FieldConfig {
     nillable: boolean;
     createable: boolean;
-    updatable: boolean;
+    updateable: boolean;
     filterable: boolean;
     groupable: boolean;
     sortable: boolean;
-    updateable: boolean;
     aggregatable: boolean;
 }
 
-export interface ReferenceField extends BaseField<'reference'> {
-    sfdcRelationshipName: string;
-    referenceTo: string[];
-}
-export interface PickList extends BaseField<'picklist'> {
-    values: string[];
-}
-export interface MultiPickList extends BaseField<'multipicklist'> {
-    values: string[];
-}
-export interface Combobox extends BaseField<'combobox'> {
-    values: string[];
-}
-
-export type Field =
+export type ScalarField =
     | BaseField<'string'>
     | BaseField<'boolean'>
     | BaseField<'int'>
@@ -62,91 +61,108 @@ export type Field =
     | BaseField<'url'>
     | BaseField<'email'>
     | BaseField<'anyType'>
-    // | BaseField<'address'>     TODO: Check implication of compound field
-    // | BaseField<'location'>    TODO: Check implication of compound field
-    | ReferenceField
-    | PickList
-    | MultiPickList
-    | Combobox;
+    | BaseField<'address'>
+    | BaseField<'location'>
+    | BaseField<'picklist'>
+    | BaseField<'multipicklist'>
+    | BaseField<'combobox'>;
 
-function gqlFieldName(sObjectField: SObjectField): string {
-    const name = sObjectField.relationshipName ?? sObjectField.name;
-    return name[0].toLowerCase() + name.slice(1);
+export interface ReferenceField extends BaseField<'reference'> {
+    sfdcRelationshipName: string;
+    referenceTo: string[];
 }
 
-function createField(sObjectField: SObjectField): Field | undefined {
-    const { name, type } = sObjectField;
+export type Field = ReferenceField | ScalarField;
 
-    const baseField = {
-        sfdcName: name,
-        gqlName: gqlFieldName(sObjectField),
-        config: {
-            nillable: sObjectField.nillable,
-            createable: sObjectField.createable,
-            updatable: sObjectField.updateable,
-            filterable: sObjectField.filterable,
-            groupable: sObjectField.groupable,
-            sortable: sObjectField.sortable,
-            updateable: sObjectField.updateable,
-            aggregatable: sObjectField.aggregatable,
-        },
+function createField(sObjectField: SObjectField): Field | undefined {
+    const {
+        name: sfdcName,
+        type,
+        nillable,
+        createable,
+        updateable,
+        filterable,
+        groupable,
+        sortable,
+        aggregatable,
+    } = sObjectField;
+
+    const config = {
+        nillable,
+        createable,
+        updateable,
+        filterable,
+        groupable,
+        sortable,
+        aggregatable,
     };
 
-    switch (type) {
-        case 'string':
-        case 'boolean':
-        case 'int':
-        case 'double':
-        case 'date':
-        case 'datetime':
-        case 'base64':
-        case 'id':
-        case 'currency':
-        case 'textarea':
-        case 'percent':
-        case 'phone':
-        case 'url':
-        case 'email':
-        case 'anyType':
-            return {
-                ...baseField,
-                type,
-            };
+    if (type === 'reference') {
+        if (sObjectField.relationshipName === null) {
+            return;
+        }
 
-        case 'reference':
-            return {
-                ...baseField,
-                type,
-                referenceTo: sObjectField.referenceTo,
-                sfdcRelationshipName: sObjectField.relationshipName!,
-            };
-
-        case 'combobox':
-        case 'picklist':
-        case 'multipicklist':
-            return {
-                ...baseField,
-                type,
-                values: sObjectField.picklistValues.map((entry) => entry.value),
-            };
+        return {
+            type,
+            sfdcName,
+            gqlName: camelCase(sObjectField.relationshipName),
+            referenceTo: sObjectField.referenceTo,
+            sfdcRelationshipName: sObjectField.relationshipName,
+            config,
+        };
+    } else {
+        return {
+            type,
+            sfdcName,
+            gqlName: camelCase(sObjectField.name),
+            config,
+        };
     }
 }
 
+function createChildRelationShip(
+    relationship: SObjectChildRelationship,
+): ChildRelationship | undefined {
+    if (relationship.relationshipName === null) {
+        return;
+    }
+
+    return {
+        sfdcName: relationship.relationshipName,
+        gqlName: camelCase(relationship.relationshipName),
+        entity: relationship.childSObject,
+    };
+}
+
 export function createEntity(sObject: DescribeSObjectResult): Entity {
-    const { name } = sObject;
-    const fields = sObject.fields
-        .map((field) => createField(field))
-        .filter((f: Field | undefined): f is Field => f !== undefined);
+    const { name, createable, updateable, deletable, queryable } = sObject;
+
+    const fields: Field[] = [];
+    const childRelationships: ChildRelationship[] = [];
+
+    for (const sObjectField of sObject.fields) {
+        const field = createField(sObjectField);
+        if (field) {
+            fields.push(field);
+        }
+    }
+    for (const sObjectRelationShip of sObject.childRelationships) {
+        const relationship = createChildRelationShip(sObjectRelationShip);
+        if (relationship) {
+            childRelationships.push(relationship);
+        }
+    }
 
     return {
         sfdcName: name,
         gqlName: name,
-        fields,
         config: {
-            createable: sObject.createable,
-            updateable: sObject.updateable,
-            deletable: sObject.deletable,
-            queryable: sObject.queryable,
+            createable,
+            updateable,
+            deletable,
+            queryable,
         },
+        fields,
+        childRelationships,
     };
 }

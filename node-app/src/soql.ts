@@ -7,9 +7,21 @@ import {
     assertObjectType,
     GraphQLObjectType,
     getNamedType,
+    GraphQLFieldResolver,
 } from 'graphql';
-import { ReferenceField } from './entity';
+
+import { Entity, ReferenceField } from './entity';
+import { Logger } from './utils/logger';
+
+import { Api } from './sfdc/api';
+import { Connection } from './sfdc/connection';
 import { SOQLRecord, SOQLResult } from './sfdc/types/soql';
+
+export interface ResolverContext {
+    connection: Connection;
+    api: Api;
+    logger?: Logger;
+}
 
 interface SoqlQueryMapping {
     selects: SoqlSelect[];
@@ -33,26 +45,53 @@ interface SoqlLookupSelect {
     selects: SoqlSelect[];
 }
 
-export function resolveInfoToSoqlQuery(
+export const soqlResolver = {
+    query(entity: Entity): GraphQLFieldResolver<unknown, ResolverContext>  {
+        return async (_, args, context, info) => {
+            const { api , logger } = context;
+
+            const soqlMapping = resolveInfoToSoqlQuery(info, entity, args);
+            const query = soqlQueryMappingToString(soqlMapping);
+
+            logger?.debug(`Execute SOQL: ${query}`);
+            const result = await api.executeSOQL(query);
+
+            return result.records[0];
+        }
+    },
+    queryMany(entity: Entity): GraphQLFieldResolver<unknown, ResolverContext> {
+        return async (_, args, context, info) => {
+            const { api , logger } = context;
+
+            const soqlMapping = resolveInfoToSoqlQuery(info, entity, args);
+            const query = soqlQueryMappingToString(soqlMapping);
+
+            logger?.debug(`Execute SOQL: ${query}`);
+            const result = await api.executeSOQL(query);
+
+            return result.records;
+        }
+    }
+}
+
+function resolveInfoToSoqlQuery(
     info: GraphQLResolveInfo,
-    returnType: GraphQLOutputType,
+    entity: Entity,
     config?: {
         limit?: number;
         offset?: number;
     },
 ): SoqlQueryMapping {
-    if (!isObjectType(returnType)) {
-        throw new Error(`Unexpected return type ${returnType.toString()}`);
-    }
-
     const { fieldNodes } = info;
     const { selectionSet } = fieldNodes[0];
 
-    const tableName = returnType.extensions.sfdc!.sfdcName;
+    const tableName = entity.sfdcName;
     const select: SoqlSelect[] = [];
 
+    const type = info.schema.getType(entity.gqlName) as GraphQLObjectType;
+
     for (const selection of selectionSet!.selections) {
-        const soqlSelect = resolveSelection(info, returnType, selection);
+        const soqlSelect = resolveSelection(info, type, selection);
         if (soqlSelect) {
             select.push(...soqlSelect);
         }

@@ -2,14 +2,14 @@ import * as graphql from 'graphql';
 import { GraphQLSchema, Source, DocumentNode } from 'graphql';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
-import { SchemaBuilder } from '../schema-builder.js';
-import { Graph } from '../graph.js';
+import { createEntity, Entity } from '../entity.js';
+import { entitiesToSchema } from '../graphql.js';
 
 import { LRU } from '../utils/lru.js';
-
 import { Api } from '../sfdc/api.js';
 
 import sfdcFastifyPlugin from './sfdc-plugin.js';
+import { ResolverContext, soqlResolver } from '../soql.js';
 
 const ENTITIES = ['Account', 'User', 'Lead', 'Opportunity'];
 
@@ -84,18 +84,32 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
         }
 
         const queryDocumentAst = parseAndValidateQuery(schema, query);
+        const context: ResolverContext = {
+            api,
+            connection,
+            logger: request.log
+        };
 
         return graphql.execute({
             schema,
             operationName,
             variableValues: variables,
             document: queryDocumentAst,
-            contextValue: {
-                api,
-                connection,
-                logger: request.log
-            },
+            contextValue: context,
         });
+    }
+
+    async function buildSchema(api: Api): Promise<GraphQLSchema> {
+        const sObjects = await Promise.all(ENTITIES.map((entity) => api.describeSObject(entity)));
+    
+        const schema = entitiesToSchema({
+            entities: sObjects.map(sObject => createEntity(sObject)),
+            resolvers: soqlResolver,
+        });
+    
+        graphql.assertValidSchema(schema);
+    
+        return schema;
     }
 
     function parseAndValidateQuery(schema: GraphQLSchema, query: string): DocumentNode {
@@ -122,18 +136,6 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
 
         return documentAst;
     }
-}
-
-async function buildSchema(api: Api): Promise<GraphQLSchema> {
-    const sObjects = await Promise.all(ENTITIES.map((entity) => api.describeSObject(entity)));
-
-    const graph = new Graph(sObjects);
-    const schemaBuilder = new SchemaBuilder(graph);
-
-    const schema = schemaBuilder.buildSchema();
-    graphql.assertValidSchema(schema);
-
-    return schema;
 }
 
 function respondWithGraphIql(response: FastifyReply) {
