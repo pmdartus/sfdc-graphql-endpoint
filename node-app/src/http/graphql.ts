@@ -2,14 +2,14 @@ import * as graphql from 'graphql';
 import { GraphQLSchema, Source, DocumentNode } from 'graphql';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
-import { createEntity, Entity } from '../entity.js';
+import { createEntity } from '../entity.js';
 import { entitiesToSchema } from '../graphql.js';
+import { soqlResolvers, ResolverContext } from '../resolvers.js';
 
 import { LRU } from '../utils/lru.js';
 import { Api } from '../sfdc/api.js';
 
 import sfdcFastifyPlugin from './sfdc-plugin.js';
-import { ResolverContext, soqlResolver } from '../soql.js';
 
 const ENTITIES = ['Account', 'User', 'Lead', 'Opportunity'];
 
@@ -49,7 +49,7 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
             };
         }
 
-        return executeQuery(request, {
+        return executeQuery(request, response, {
             ...request.params,
             variables,
         });
@@ -58,13 +58,14 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
     fastify.post<{
         Body: GraphQLParams;
     }>('/graphql', async (request, response) => {
-        return executeQuery(request, {
+        return executeQuery(request, response, {
             ...request.body,
         });
     });
 
     async function executeQuery(
         request: FastifyRequest,
+        response: FastifyReply,
         params: GraphQLParams,
     ): Promise<graphql.ExecutionResult> {
         const { api, connection } = fastify.sfdc;
@@ -90,13 +91,24 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
             logger: request.log
         };
 
-        return graphql.execute({
-            schema,
-            operationName,
-            variableValues: variables,
-            document: queryDocumentAst,
-            contextValue: context,
-        });
+        let result: graphql.ExecutionResult;
+        try {
+            result = await graphql.execute({
+                schema,
+                operationName,
+                variableValues: variables,
+                document: queryDocumentAst,
+                contextValue: context,
+            });
+        } catch (error: unknown) {
+            throw {
+                statusCode: 400,
+                message: 'GraphQL execution error.',
+                graphqlErrors: [error]
+            }
+        }
+
+        return result;
     }
 
     async function buildSchema(api: Api): Promise<GraphQLSchema> {
@@ -104,7 +116,7 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
     
         const schema = entitiesToSchema({
             entities: sObjects.map(sObject => createEntity(sObject)),
-            resolvers: soqlResolver,
+            resolvers: soqlResolvers,
         });
     
         graphql.assertValidSchema(schema);

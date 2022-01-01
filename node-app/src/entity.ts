@@ -166,3 +166,15 @@ export function createEntity(sObject: DescribeSObjectResult): Entity {
         childRelationships,
     };
 }
+
+export function assertScalarField(field: Field): asserts field is ScalarField {
+    if (field.type === 'reference') {
+        throw new Error(`Expected a scalar field but received a ${field.type}.`);
+    }
+}
+
+export function assertReferenceField(field: Field): asserts field is ReferenceField {
+    if (field.type !== 'reference') {
+        throw new Error(`Expected a reference field but received a ${field.type}.`);
+    }
+}

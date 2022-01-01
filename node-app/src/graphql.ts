@@ -40,6 +40,8 @@ interface SchemaConfig<Context> {
 interface State {
     config: SchemaConfig<any>;
     types: Map<string, GraphQLObjectType>;
+    columnExprTypes: Map<string, GraphQLInputObjectType>;
+    orderByTypes: Map<string, GraphQLList<GraphQLInputObjectType>>;
 }
 
 const SCALAR_TYPES: { [type in ScalarField['type']]: GraphQLScalarType } = {
@@ -76,7 +78,7 @@ const BY_ID_INPUT_ARGS = {
     id: {
         type: GraphQLID,
     },
-}
+};
 
 const PAGINATION_INPUT_ARGS = {
     limit: {
@@ -87,22 +89,34 @@ const PAGINATION_INPUT_ARGS = {
     },
 };
 
+export type GraphQLSortOrderValue =
+    | 'ASC'
+    | 'DESC'
+    | 'ASC_NULLS_FIRST'
+    | 'ASC_NULLS_LAST'
+    | 'DESC_NULLS_FIRST'
+    | 'DESC_NULLS_LAST';
+
+const ORDER_BY_ENUM_TYPE_VALUES: { [name in GraphQLSortOrderValue]: {} } = {
+    ASC: {},
+    DESC: {},
+    ASC_NULLS_FIRST: {},
+    ASC_NULLS_LAST: {},
+    DESC_NULLS_FIRST: {},
+    DESC_NULLS_LAST: {},
+}
+
 const ORDER_BY_ENUM_TYPE = new GraphQLEnumType({
     name: 'OrderByEnum',
-    values: {
-        ASC: {},
-        DESC: {},
-        ASC_NULL_FIRST: {},
-        ASC_NULL_LAST: {},
-        DESC_NULL_FIRST: {},
-        DESC_NULL_LAST: {},
-    },
+    values: ORDER_BY_ENUM_TYPE_VALUES,
 });
 
 export function entitiesToSchema<Context>(config: SchemaConfig<Context>): GraphQLSchema {
     const state: State = {
         config,
         types: new Map(),
+        orderByTypes: new Map(),
+        columnExprTypes: new Map(),
     };
 
     for (const entity of config.entities) {
@@ -134,10 +148,7 @@ function createGraphQLEntityType(state: State, entity: Entity): GraphQLObjectTyp
     });
 }
 
-function createGraphQLEntityField(
-    state: State,
-    field: Field,
-): GraphQLFieldConfig<any, unknown> {
+function createGraphQLEntityField(state: State, field: Field): GraphQLFieldConfig<any, unknown> {
     let type: GraphQLOutputType;
     let resolve: GraphQLFieldResolver<any, unknown> = (source) => {
         return source[field.sfdcName];
@@ -193,51 +204,57 @@ function createEntityQueries(
     const { gqlName, sfdcName } = entity;
     const { resolvers } = state.config;
 
-    const type = state.types.get(sfdcName);
-
-    if (type === undefined) {
-        throw new Error(`Missing type ${sfdcName}`);
-    }
+    const type = state.types.get(sfdcName)!;
 
     const orderByInputType = new GraphQLList(
         new GraphQLInputObjectType({
             name: `${sfdcName}OrderBy`,
             fields: Object.fromEntries(
                 entity.fields
-                    .filter((field) => field.config.sortable && field.type !== 'reference')
+                    .filter((field) => field.config.sortable)
                     .map((field) => [
                         field.gqlName,
                         {
-                            type: ORDER_BY_ENUM_TYPE,
+                            type:
+                                field.type === 'reference'
+                                    ? state.orderByTypes.get(field.referenceTo[0]) ??
+                                      ORDER_BY_ENUM_TYPE
+                                    : ORDER_BY_ENUM_TYPE,
                         },
                     ]),
             ),
         }),
     );
+    state.orderByTypes.set(sfdcName, orderByInputType);
 
-    const columnExprInputType = new GraphQLInputObjectType({
+    const columnExprInputType: GraphQLInputObjectType = new GraphQLInputObjectType({
         name: `${sfdcName}ColumnExpr`,
         fields: () => {
-            const fields: Record<string, GraphQLInputFieldConfig> = {
+            return {
                 _and: {
                     type: new GraphQLList(columnExprInputType),
                 },
                 _or: {
                     type: new GraphQLList(columnExprInputType),
-                }
+                },
+                ...Object.fromEntries(
+                    entity.fields
+                        .filter((field) => field.config.filterable)
+                        .map((field) => [
+                            field.gqlName,
+                            {
+                                type:
+                                    field.type === 'reference'
+                                        ? state.columnExprTypes.get(field.referenceTo[0]) ??
+                                          ORDER_BY_ENUM_TYPE
+                                        : OPERATOR_INPUT_TYPES[field.type],
+                            },
+                        ]),
+                ),
             };
-
-            for (const field of entity.fields) {
-                if (field.config.filterable && field.type !== 'reference') {
-                    fields[field.gqlName] = {
-                        type: OPERATOR_INPUT_TYPES[field.type],
-                    };
-                }
-            }
-
-            return fields;
         },
     });
+    state.columnExprTypes.set(sfdcName, columnExprInputType);
 
     return {
         [gqlName]: {
