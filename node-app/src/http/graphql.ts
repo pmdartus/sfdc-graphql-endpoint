@@ -88,7 +88,7 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
         const context: ResolverContext = {
             api,
             connection,
-            logger: request.log
+            logger: request.log,
         };
 
         let result: graphql.ExecutionResult;
@@ -104,8 +104,8 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
             throw {
                 statusCode: 400,
                 message: 'GraphQL execution error.',
-                graphqlErrors: [error]
-            }
+                graphqlErrors: [error],
+            };
         }
 
         return result;
@@ -113,14 +113,14 @@ export async function graphqlFastifyPlugin(fastify: FastifyInstance) {
 
     async function buildSchema(api: Api): Promise<GraphQLSchema> {
         const sObjects = await Promise.all(ENTITIES.map((entity) => api.describeSObject(entity)));
-    
+
         const schema = entitiesToSchema({
-            entities: sObjects.map(sObject => createEntity(sObject)),
+            entities: sObjects.map((sObject) => createEntity(sObject)),
             resolvers: soqlResolvers,
         });
-    
+
         graphql.assertValidSchema(schema);
-    
+
         return schema;
     }
 

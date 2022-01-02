@@ -5,8 +5,8 @@ import * as child_process from 'node:child_process';
 import { fetch } from 'undici';
 
 interface ConnectionConfig {
-    instanceUrl: string; 
-    accessToken: string
+    instanceUrl: string;
+    accessToken: string;
 }
 
 export class Connection {
@@ -18,11 +18,14 @@ export class Connection {
         this.#accessToken = accessToken;
     }
 
-    async fetch<T>(endpoint: string, options?: {
-        searchParams?: Record<string, string>
-    }): Promise<T> {
+    async fetch<T>(
+        endpoint: string,
+        options?: {
+            searchParams?: Record<string, string>;
+        },
+    ): Promise<T> {
         const url = new URL(endpoint, this.#instanceUrl);
-        
+
         if (options?.searchParams) {
             for (const [name, value] of Object.entries(options.searchParams)) {
                 url.searchParams.set(name, value);
@@ -56,12 +59,12 @@ export class Connection {
                 accessToken: process.env.ACCESS_TOKEN,
                 instanceUrl: process.env.INSTANCE_URL,
             };
-        } else {    
+        } else {
             const output = child_process.execSync('sfdx force:user:display --json', {
                 cwd: path.dirname(fileURLToPath(import.meta.url)),
                 encoding: 'utf-8',
             });
-    
+
             const { accessToken, instanceUrl } = JSON.parse(output).result;
 
             config = {
@@ -73,5 +76,3 @@ export class Connection {
         return new Connection(config);
     }
 }
-
-

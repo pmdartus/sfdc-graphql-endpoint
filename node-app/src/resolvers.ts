@@ -1,19 +1,15 @@
 import {
-    assertObjectType,
     GraphQLResolveInfo,
     Kind,
-    SelectionNode,
     GraphQLObjectType,
-    getNamedType,
     GraphQLFieldResolver,
     SelectionSetNode,
     ArgumentNode,
     IntValueNode,
     ObjectValueNode,
-    GraphQLSchema,
 } from 'graphql';
 
-import { assertReferenceField, Entity, ReferenceField } from './entity';
+import { Entity } from './entity';
 import { GraphQLSortOrderValue } from './graphql';
 
 import { Api } from './sfdc/api';
@@ -23,7 +19,6 @@ import {
     SOQLComparisonOperator,
     SOQLConditionExpr,
     SOQLConditionExprType,
-    SOQLLogicalOperator,
     SOQLOrderByItem,
     SOQLQuery,
     SOQLSelect,

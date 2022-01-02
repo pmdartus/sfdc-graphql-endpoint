@@ -7,8 +7,8 @@ const __prod__ = process.env.NODE_ENV === 'production';
 
 const fastify = Fastify({
     logger: {
-        level: __prod__ ? 'log' : 'debug'
-    }
+        level: __prod__ ? 'log' : 'debug',
+    },
 });
 
 fastify.register(graphqlFastifyPlugin);

@@ -11,7 +11,7 @@ export class LRU<K, V> {
     #head: ListNode<K, V> | null = null;
     #tail: ListNode<K, V> | null = null;
 
-    constructor(limit: number = 100) {
+    constructor(limit = 100) {
         this.limit = limit;
     }
 
@@ -42,7 +42,7 @@ export class LRU<K, V> {
             key,
             value,
             prev: null,
-            next: this.#head
+            next: this.#head,
         };
 
         if (this.#head === null) {
@@ -63,7 +63,7 @@ export class LRU<K, V> {
         }
 
         this.#map.delete(key);
-        
+
         if (entry.prev !== null) {
             entry.prev.next = entry.next;
         } else {
@@ -83,7 +83,7 @@ export class LRU<K, V> {
     }
 
     *keys(): Generator<K> {
-        let node = this.#head;
+        const node = this.#head;
 
         while (node !== null) {
             yield node.key;
@@ -91,7 +91,7 @@ export class LRU<K, V> {
     }
 
     *values(): Generator<V> {
-        let node = this.#head;
+        const node = this.#head;
 
         while (node !== null) {
             yield node.value;
@@ -99,7 +99,7 @@ export class LRU<K, V> {
     }
 
     *entries(): Generator<[K, V]> {
-        let node = this.#head;
+        const node = this.#head;
 
         while (node !== null) {
             yield [node.key, node.value];

@@ -154,7 +154,7 @@ function createField(sObjectField: SObjectField): Field | undefined {
     };
 
     if (type === 'reference') {
-        // Ignores the reference field when it doesn't have a relationship name. This shouldn't be 
+        // Ignores the reference field when it doesn't have a relationship name. This shouldn't be
         // possible per the documentation, however it is the case for "DelegatedApproverId" field
         // the standard "Account" object.
         if (!sObjectField.relationshipName) {
@@ -166,7 +166,7 @@ function createField(sObjectField: SObjectField): Field | undefined {
             gqlName: camelCase(sObjectField.relationshipName),
             sfdcRelationshipName: sObjectField.relationshipName,
             config,
-        }
+        };
 
         if (sObjectField.polymorphicForeignKey) {
             return {

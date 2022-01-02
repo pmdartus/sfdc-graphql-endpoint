@@ -33,7 +33,8 @@ declare module 'graphql' {
         sfdc?: Entity;
     }
 
-    interface GraphQLFieldExtensions<_TSource, _TContext, _TArgs = any> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    interface GraphQLFieldExtensions<_TSource, _TContext> {
         sfdc?: Field;
     }
 }
@@ -106,7 +107,7 @@ export type GraphQLSortOrderValue =
     | 'DESC_NULLS_FIRST'
     | 'DESC_NULLS_LAST';
 
-const ORDER_BY_ENUM_TYPE_VALUES: { [name in GraphQLSortOrderValue]: {} } = {
+const ORDER_BY_ENUM_TYPE_VALUES: { [name in GraphQLSortOrderValue]: object } = {
     ASC: {},
     DESC: {},
     ASC_NULLS_FIRST: {},
@@ -157,7 +158,7 @@ function createGraphQLEntityType(state: State, entity: Entity): GraphQLObjectTyp
     });
 }
 
-function createGraphQLEntityField(state: State, field: Field): GraphQLFieldConfig<any, unknown> {
+function createGraphQLEntityField(state: State, field: Field): GraphQLFieldConfig<unknown, unknown> {
     let type: GraphQLOutputType;
     let resolve: GraphQLFieldResolver<any, unknown> = (source) => {
         return source[field.sfdcName];

@@ -1,5 +1,6 @@
 export interface LoggerFn {
-    (...args: any[]): void;
+    (msg: string, ...args: unknown[]): void;
+    (obj: unknown, msg?: string, ...args: unknown[]): void;
 }
 
 export interface Logger {
