@@ -28,7 +28,7 @@ export interface EntityConfig {
     queryable: boolean;
 }
 
-interface BaseField<T extends SObjectFieldType> {
+interface BaseField<T extends FieldType> {
     type: T;
     sfdcName: string;
     gqlName: string;
@@ -45,34 +45,90 @@ export interface FieldConfig {
     aggregatable: boolean;
 }
 
-export type ScalarField =
-    | BaseField<'string'>
-    | BaseField<'boolean'>
-    | BaseField<'int'>
-    | BaseField<'double'>
-    | BaseField<'date'>
-    | BaseField<'datetime'>
-    | BaseField<'base64'>
-    | BaseField<'id'>
-    | BaseField<'currency'>
-    | BaseField<'textarea'>
-    | BaseField<'percent'>
-    | BaseField<'phone'>
-    | BaseField<'url'>
-    | BaseField<'email'>
-    | BaseField<'anyType'>
-    | BaseField<'address'>
-    | BaseField<'location'>
-    | BaseField<'picklist'>
-    | BaseField<'multipicklist'>
-    | BaseField<'combobox'>;
-
-export interface ReferenceField extends BaseField<'reference'> {
-    sfdcRelationshipName: string;
-    referenceTo: string[];
+export const enum FieldType {
+    STRING = 'String',
+    BOOLEAN = 'Boolean',
+    INT = 'Int',
+    FLOAT = 'Float',
+    DATE = 'Date',
+    DATETIME = 'DateTime',
+    BASE64 = 'Base64',
+    ID = 'Id',
+    CURRENCY = 'Currency',
+    TEXTAREA = 'TextArea',
+    PERCENT = 'Percent',
+    PHONE = 'Phone',
+    URL = 'URL',
+    EMAIL = 'Email',
+    ANY_TYPE = ' AnyType',
+    ADDRESS = 'Address',
+    LOCATION = 'Location',
+    PICKLIST = 'Picklist',
+    MULTI_PICKLIST = 'MultiPicklist',
+    COMBOBOX = 'ComboBox',
+    REFERENCE = 'Reference',
+    POLYMORPHIC_REFERENCE = 'PolymorphicReference',
 }
 
-export type Field = ReferenceField | ScalarField;
+export type ScalarField =
+    | BaseField<FieldType.STRING>
+    | BaseField<FieldType.BOOLEAN>
+    | BaseField<FieldType.INT>
+    | BaseField<FieldType.FLOAT>
+    | BaseField<FieldType.DATE>
+    | BaseField<FieldType.DATETIME>
+    | BaseField<FieldType.BASE64>
+    | BaseField<FieldType.ID>
+    | BaseField<FieldType.CURRENCY>
+    | BaseField<FieldType.TEXTAREA>
+    | BaseField<FieldType.PERCENT>
+    | BaseField<FieldType.PHONE>
+    | BaseField<FieldType.URL>
+    | BaseField<FieldType.EMAIL>
+    | BaseField<FieldType.ANY_TYPE>
+    | BaseField<FieldType.EMAIL>
+    | BaseField<FieldType.ADDRESS>
+    | BaseField<FieldType.LOCATION>
+    | BaseField<FieldType.PICKLIST>
+    | BaseField<FieldType.MULTI_PICKLIST>
+    | BaseField<FieldType.COMBOBOX>;
+
+export interface ReferenceField extends BaseField<FieldType.REFERENCE> {
+    sfdcRelationshipName: string;
+    sfdcReferencedEntityName: string;
+}
+
+export interface PolymorphicReferenceField extends BaseField<FieldType.POLYMORPHIC_REFERENCE> {
+    sfdcRelationshipName: string;
+    sfdcReferencedEntitiesNames: string[];
+}
+
+export type Field = ScalarField | ReferenceField | PolymorphicReferenceField;
+
+const SOBJECT_FIELD_SCALAR_TYPE_MAPPING: {
+    [type in Exclude<SObjectFieldType, 'reference'>]: ScalarField['type'];
+} = {
+    string: FieldType.STRING,
+    boolean: FieldType.BOOLEAN,
+    int: FieldType.INT,
+    double: FieldType.FLOAT,
+    date: FieldType.DATE,
+    datetime: FieldType.DATETIME,
+    base64: FieldType.BASE64,
+    id: FieldType.ID,
+    currency: FieldType.CURRENCY,
+    textarea: FieldType.TEXTAREA,
+    percent: FieldType.PERCENT,
+    phone: FieldType.PHONE,
+    url: FieldType.URL,
+    email: FieldType.EMAIL,
+    combobox: FieldType.COMBOBOX,
+    picklist: FieldType.PICKLIST,
+    multipicklist: FieldType.MULTI_PICKLIST,
+    anyType: FieldType.ANY_TYPE,
+    address: FieldType.ADDRESS,
+    location: FieldType.LOCATION,
+};
 
 function createField(sObjectField: SObjectField): Field | undefined {
     const {
@@ -98,21 +154,36 @@ function createField(sObjectField: SObjectField): Field | undefined {
     };
 
     if (type === 'reference') {
-        if (sObjectField.relationshipName === null) {
+        // Ignores the reference field when it doesn't have a relationship name. This shouldn't be 
+        // possible per the documentation, however it is the case for "DelegatedApproverId" field
+        // the standard "Account" object.
+        if (!sObjectField.relationshipName) {
             return;
         }
 
-        return {
-            type,
+        const baseReferenceField = {
             sfdcName,
             gqlName: camelCase(sObjectField.relationshipName),
-            referenceTo: sObjectField.referenceTo,
             sfdcRelationshipName: sObjectField.relationshipName,
             config,
-        };
+        }
+
+        if (sObjectField.polymorphicForeignKey) {
+            return {
+                type: FieldType.POLYMORPHIC_REFERENCE,
+                sfdcReferencedEntitiesNames: sObjectField.referenceTo,
+                ...baseReferenceField,
+            };
+        } else {
+            return {
+                type: FieldType.REFERENCE,
+                sfdcReferencedEntityName: sObjectField.referenceTo[0],
+                ...baseReferenceField,
+            };
+        }
     } else {
         return {
-            type,
+            type: SOBJECT_FIELD_SCALAR_TYPE_MAPPING[type],
             sfdcName,
             gqlName: camelCase(sObjectField.name),
             config,
@@ -137,21 +208,13 @@ function createChildRelationShip(
 export function createEntity(sObject: DescribeSObjectResult): Entity {
     const { name, createable, updateable, deletable, queryable } = sObject;
 
-    const fields: Field[] = [];
-    const childRelationships: ChildRelationship[] = [];
+    const fields = sObject.fields
+        .map(createField)
+        .filter((field): field is Field => field !== undefined);
 
-    for (const sObjectField of sObject.fields) {
-        const field = createField(sObjectField);
-        if (field) {
-            fields.push(field);
-        }
-    }
-    for (const sObjectRelationShip of sObject.childRelationships) {
-        const relationship = createChildRelationShip(sObjectRelationShip);
-        if (relationship) {
-            childRelationships.push(relationship);
-        }
-    }
+    const childRelationships = sObject.childRelationships
+        .map(createChildRelationShip)
+        .filter((rel): rel is ChildRelationship => rel !== undefined);
 
     return {
         sfdcName: name,
@@ -167,14 +230,26 @@ export function createEntity(sObject: DescribeSObjectResult): Entity {
     };
 }
 
+export function isScalarField(field: Field): field is ScalarField {
+    return field.type !== FieldType.REFERENCE && field.type !== FieldType.POLYMORPHIC_REFERENCE;
+}
+
 export function assertScalarField(field: Field): asserts field is ScalarField {
-    if (field.type === 'reference') {
+    if (!isScalarField(field)) {
         throw new Error(`Expected a scalar field but received a ${field.type}.`);
     }
 }
 
+export function isReferenceField(field: Field): field is ReferenceField {
+    return field.type === FieldType.REFERENCE;
+}
+
 export function assertReferenceField(field: Field): asserts field is ReferenceField {
-    if (field.type !== 'reference') {
+    if (!isReferenceField(field)) {
         throw new Error(`Expected a reference field but received a ${field.type}.`);
     }
+}
+
+export function isPolymorphicReference(field: Field): field is PolymorphicReferenceField {
+    return field.type === FieldType.POLYMORPHIC_REFERENCE;
 }

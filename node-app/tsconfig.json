@@ -4,6 +4,9 @@
         "target": "ESNext",
         "module": "ESNext",
 
+        "sourceMap": true,
+        "declaration": true,
+
         "moduleResolution": "Node",
 
         "strict": true,

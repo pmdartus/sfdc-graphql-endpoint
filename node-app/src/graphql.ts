@@ -17,7 +17,16 @@ import {
     GraphQLString,
 } from 'graphql';
 
-import { Entity, Field, ScalarField } from './entity.js';
+import {
+    Entity,
+    Field,
+    FieldType,
+    isPolymorphicReference,
+    isReferenceField,
+    isScalarField,
+    ReferenceField,
+    ScalarField,
+} from './entity.js';
 
 declare module 'graphql' {
     interface GraphQLObjectTypeExtensions {
@@ -44,34 +53,34 @@ interface State {
     orderByTypes: Map<string, GraphQLList<GraphQLInputObjectType>>;
 }
 
-const SCALAR_TYPES: { [type in ScalarField['type']]: GraphQLScalarType } = {
+const SCALAR_TYPES_MAPPING: { [type in ScalarField['type']]: GraphQLScalarType } = {
     // Builtin GraphQL scalars
-    id: GraphQLID,
-    string: GraphQLString,
-    boolean: GraphQLBoolean,
-    int: GraphQLInt,
-    double: GraphQLFloat,
+    [FieldType.ID]: GraphQLID,
+    [FieldType.STRING]: GraphQLString,
+    [FieldType.BOOLEAN]: GraphQLBoolean,
+    [FieldType.INT]: GraphQLInt,
+    [FieldType.FLOAT]: GraphQLFloat,
 
     // Custom SFDC types
-    date: new GraphQLScalarType({ name: 'Date' }),
-    datetime: new GraphQLScalarType({ name: 'DateTime' }),
-    base64: new GraphQLScalarType({ name: 'Base64' }),
-    currency: new GraphQLScalarType({ name: 'Currency' }),
-    textarea: new GraphQLScalarType({ name: 'TextArea' }),
-    percent: new GraphQLScalarType({ name: 'Percent' }),
-    phone: new GraphQLScalarType({ name: 'Phone' }),
-    url: new GraphQLScalarType({ name: 'URL' }),
-    email: new GraphQLScalarType({ name: 'Email' }),
-    combobox: new GraphQLScalarType({ name: 'Combobox' }),
-    anyType: new GraphQLScalarType({ name: 'AnyType' }),
-    picklist: new GraphQLScalarType({ name: 'Picklist' }),
-    multipicklist: new GraphQLScalarType({ name: 'MultiPicklist' }),
-    address: new GraphQLScalarType({ name: 'Address' }),
-    location: new GraphQLScalarType({ name: 'Location' }),
+    [FieldType.DATE]: new GraphQLScalarType({ name: 'Date' }),
+    [FieldType.DATETIME]: new GraphQLScalarType({ name: 'DateTime' }),
+    [FieldType.BASE64]: new GraphQLScalarType({ name: 'Base64' }),
+    [FieldType.CURRENCY]: new GraphQLScalarType({ name: 'Currency' }),
+    [FieldType.TEXTAREA]: new GraphQLScalarType({ name: 'TextArea' }),
+    [FieldType.PERCENT]: new GraphQLScalarType({ name: 'Percent' }),
+    [FieldType.PHONE]: new GraphQLScalarType({ name: 'Phone' }),
+    [FieldType.URL]: new GraphQLScalarType({ name: 'URL' }),
+    [FieldType.EMAIL]: new GraphQLScalarType({ name: 'Email' }),
+    [FieldType.COMBOBOX]: new GraphQLScalarType({ name: 'Combobox' }),
+    [FieldType.ANY_TYPE]: new GraphQLScalarType({ name: 'AnyType' }),
+    [FieldType.PICKLIST]: new GraphQLScalarType({ name: 'Picklist' }),
+    [FieldType.MULTI_PICKLIST]: new GraphQLScalarType({ name: 'MultiPicklist' }),
+    [FieldType.ADDRESS]: new GraphQLScalarType({ name: 'Address' }),
+    [FieldType.LOCATION]: new GraphQLScalarType({ name: 'Location' }),
 };
 
-const OPERATOR_INPUT_TYPES = Object.fromEntries(
-    Object.entries(SCALAR_TYPES).map(([key, type]) => [key, createInputOperator({ type })]),
+const OPERATOR_INPUT_TYPES_MAPPING = Object.fromEntries(
+    Object.entries(SCALAR_TYPES_MAPPING).map(([key, type]) => [key, createInputOperator({ type })]),
 ) as { [type in ScalarField['type']]: GraphQLInputObjectType };
 
 const BY_ID_INPUT_ARGS = {
@@ -104,7 +113,7 @@ const ORDER_BY_ENUM_TYPE_VALUES: { [name in GraphQLSortOrderValue]: {} } = {
     ASC_NULLS_LAST: {},
     DESC_NULLS_FIRST: {},
     DESC_NULLS_LAST: {},
-}
+};
 
 const ORDER_BY_ENUM_TYPE = new GraphQLEnumType({
     name: 'OrderByEnum',
@@ -154,19 +163,23 @@ function createGraphQLEntityField(state: State, field: Field): GraphQLFieldConfi
         return source[field.sfdcName];
     };
 
-    if (field.type !== 'reference') {
-        type = SCALAR_TYPES[field.type];
-    } else {
-        const { referenceTo } = field;
-
-        if (referenceTo.length === 1 && state.types.has(referenceTo[0])) {
-            type = state.types.get(referenceTo[0])!;
+    if (isScalarField(field)) {
+        type = SCALAR_TYPES_MAPPING[field.type];
+    } else if (isReferenceField(field)) {
+        // If the the referenced entity is part of the graph, make the field resolve to the
+        // associated GraphQL type. Otherwise make the field resolve object id.
+        if (state.types.has(field.sfdcReferencedEntityName)) {
+            type = state.types.get(field.sfdcReferencedEntityName)!;
             resolve = (source) => {
-                return source[field.sfdcRelationshipName];
+                return source[field.sfdcReferencedEntityName];
             };
         } else {
+            // TODO: Add support for lookup that aren't part of the graph.
             type = GraphQLID;
         }
+    } else {
+        // TODO: Add support for polymorphic field lookups.
+        type = GraphQLID;
     }
 
     if (!field.config.nillable) {
@@ -186,13 +199,10 @@ function createQuery(state: State, entities: Entity[]): GraphQLObjectType {
     return new GraphQLObjectType({
         name: 'Query',
         fields: () => {
-            let fields = {};
-
-            for (const entity of entities) {
-                fields = { ...fields, ...createEntityQueries(state, entity) };
-            }
-
-            return fields;
+            return Object.assign(
+                {},
+                ...entities.map((entity) => createEntityQueries(state, entity)),
+            );
         },
     });
 }
@@ -215,11 +225,10 @@ function createEntityQueries(
                     .map((field) => [
                         field.gqlName,
                         {
-                            type:
-                                field.type === 'reference'
-                                    ? state.orderByTypes.get(field.referenceTo[0]) ??
-                                      ORDER_BY_ENUM_TYPE
-                                    : ORDER_BY_ENUM_TYPE,
+                            type: isReferenceField(field)
+                                ? state.orderByTypes.get(field.sfdcReferencedEntityName) ??
+                                  ORDER_BY_ENUM_TYPE
+                                : ORDER_BY_ENUM_TYPE,
                         },
                     ]),
             ),
@@ -239,15 +248,17 @@ function createEntityQueries(
                 },
                 ...Object.fromEntries(
                     entity.fields
-                        .filter((field) => field.config.filterable)
+                        .filter(
+                            (field): field is ScalarField | ReferenceField =>
+                                field.config.filterable && !isPolymorphicReference(field),
+                        )
                         .map((field) => [
                             field.gqlName,
                             {
-                                type:
-                                    field.type === 'reference'
-                                        ? state.columnExprTypes.get(field.referenceTo[0]) ??
-                                          ORDER_BY_ENUM_TYPE
-                                        : OPERATOR_INPUT_TYPES[field.type],
+                                type: isReferenceField(field)
+                                    ? state.columnExprTypes.get(field.sfdcReferencedEntityName) ??
+                                      ORDER_BY_ENUM_TYPE
+                                    : OPERATOR_INPUT_TYPES_MAPPING[field.type],
                             },
                         ]),
                 ),

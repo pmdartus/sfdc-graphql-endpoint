@@ -11,7 +11,7 @@ import { Api } from '../sfdc/api.js';
 
 import sfdcFastifyPlugin from './sfdc-plugin.js';
 
-const ENTITIES = ['Account', 'User', 'Lead', 'Opportunity'];
+const ENTITIES = ['Account', 'User', 'Lead', 'Opportunity', 'Event'];
 
 interface GraphQLQueryString {
     query?: string;
