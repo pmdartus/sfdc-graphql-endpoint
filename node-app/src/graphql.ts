@@ -172,7 +172,7 @@ function createGraphQLEntityField(state: State, field: Field): GraphQLFieldConfi
         if (state.types.has(field.sfdcReferencedEntityName)) {
             type = state.types.get(field.sfdcReferencedEntityName)!;
             resolve = (source) => {
-                return source[field.sfdcReferencedEntityName];
+                return source[field.sfdcRelationshipName];
             };
         } else {
             // TODO: Add support for lookup that aren't part of the graph.
@@ -228,7 +228,7 @@ function createEntityQueries(
                         {
                             type: isReferenceField(field)
                                 ? state.orderByTypes.get(field.sfdcReferencedEntityName) ??
-                                  ORDER_BY_ENUM_TYPE
+                                ORDER_BY_ENUM_TYPE
                                 : ORDER_BY_ENUM_TYPE,
                         },
                     ]),

@@ -182,6 +182,11 @@ function createField(sObjectField: SObjectField): Field | undefined {
             };
         }
     } else {
+        // TODO: What should be done with compound fields? Compound fields contains duplicate
+        // information, that will be present in other fields.
+        // For example: 
+        //  - name -> first name + last name
+        //  - address -> address city + address street + ...
         return {
             type: SOBJECT_FIELD_SCALAR_TYPE_MAPPING[type],
             sfdcName,
