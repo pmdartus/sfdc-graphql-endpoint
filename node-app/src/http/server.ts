@@ -1,25 +1,18 @@
-import Fastify from 'fastify';
-
-import { graphqlFastifyPlugin } from './graphql.js';
+import app from './app.js';
 
 const port = process.env.PORT ?? 3000;
 const __prod__ = process.env.NODE_ENV === 'production';
 
-const fastify = Fastify({
+const server = app({
     logger: {
         level: __prod__ ? 'log' : 'debug',
     },
+    entities: ['Account', 'User', 'Lead', 'Opportunity', 'Event'],
 });
 
-fastify.register(graphqlFastifyPlugin);
-
-fastify.get('/', (_, response) => {
-    response.redirect('/graphql');
-});
-
-fastify.listen(port, (err) => {
+server.listen(port, (err) => {
     if (err) {
-        fastify.log.error(err);
+        server.log.error(err);
         process.exit(1);
     }
 });

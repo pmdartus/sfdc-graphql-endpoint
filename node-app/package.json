@@ -7,9 +7,14 @@
     "clean": "rm -rf dist/",
     "lint": "eslint src/",
     "format": "prettier src/ --write",
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "test:integration": "mocha --config ./integration/.mocharc.json"
   },
-  "keywords": ["Salesforce", "SFDC", "GraphQL"],
+  "keywords": [
+    "Salesforce",
+    "SFDC",
+    "GraphQL"
+  ],
   "author": "Pierre-Marie Dartus <pm@dartus.fr>",
   "license": "MIT",
   "dependencies": {
@@ -19,11 +24,14 @@
     "undici": "^4.12.1"
   },
   "devDependencies": {
+    "@types/mocha": "^9.0.0",
     "@types/node": "^16.0.0",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",
     "eslint": "^8.6.0",
+    "mocha": "^9.1.3",
     "prettier": "^2.5.1",
+    "ts-node": "^10.4.0",
     "typescript": "^4.5.4"
   }
 }
