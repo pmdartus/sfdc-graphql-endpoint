@@ -63,8 +63,10 @@ const SCALAR_TYPES_MAPPING: { [type in ScalarField['type']]: GraphQLScalarType }
     [FieldType.FLOAT]: GraphQLFloat,
 
     // Custom SFDC types
+    [FieldType.ENCRYPTED_STRING]: new GraphQLScalarType({ name: 'EncryptedString' }),
     [FieldType.DATE]: new GraphQLScalarType({ name: 'Date' }),
     [FieldType.DATETIME]: new GraphQLScalarType({ name: 'DateTime' }),
+    [FieldType.TIME]: new GraphQLScalarType({ name: 'Time' }),
     [FieldType.BASE64]: new GraphQLScalarType({ name: 'Base64' }),
     [FieldType.CURRENCY]: new GraphQLScalarType({ name: 'Currency' }),
     [FieldType.TEXTAREA]: new GraphQLScalarType({ name: 'TextArea' }),

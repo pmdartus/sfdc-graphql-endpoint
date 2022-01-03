@@ -5,11 +5,13 @@
 
 export type SObjectFieldType =
     | 'string'
+    | 'encryptedstring'
     | 'boolean'
     | 'int'
     | 'double'
     | 'date'
     | 'datetime'
+    | 'time'
     | 'base64'
     | 'id'
     | 'reference'

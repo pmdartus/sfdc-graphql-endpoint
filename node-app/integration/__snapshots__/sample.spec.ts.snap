@@ -1,0 +1,295 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Sample entity introspect schema 1`] = `
+"type Sample__c {
+  id: ID!
+  owner: ID!
+  isDeleted: Boolean!
+  name: String
+  createdDate: DateTime!
+  createdBy: ID!
+  lastModifiedDate: DateTime!
+  lastModifiedBy: ID!
+  systemModstamp: DateTime!
+  lastViewedDate: DateTime
+  lastReferencedDate: DateTime
+  sampleCheckbox__c: Boolean!
+  sampleCurrency__c: Currency
+  sampleDate__c: Date
+  sampleDateTime__c: DateTime
+  sampleTime__c: Time
+  sampleEmail__c: Email
+  sampleNumber__c: Float
+  samplePercent__c: Percent
+  samplePhone__c: Phone
+  samplePicklist__c: Picklist
+  sampleMultiPicklist__c: MultiPicklist
+  sampleText__c: String
+  sampleEncryptedText__c: EncryptedString
+  sampleTextArea__c: TextArea
+  sampleLongTextArea__c: TextArea
+  sampleRichTextArea__c: TextArea
+  sampleURL__c: URL
+}
+
+scalar DateTime
+
+scalar Currency
+
+scalar Date
+
+scalar Time
+
+scalar Email
+
+scalar Percent
+
+scalar Phone
+
+scalar Picklist
+
+scalar MultiPicklist
+
+scalar EncryptedString
+
+scalar TextArea
+
+scalar URL
+
+type Query {
+  Sample__c(limit: Int!, offset: Int, where: Sample__cColumnExpr, order_by: [Sample__cOrderBy]): [Sample__c]
+  Sample__c_by_id(id: ID): Sample__c
+}
+
+input Sample__cColumnExpr {
+  _and: [Sample__cColumnExpr]
+  _or: [Sample__cColumnExpr]
+  id: IDOperator
+  isDeleted: BooleanOperator
+  name: StringOperator
+  createdDate: DateTimeOperator
+  createdBy: OrderByEnum
+  lastModifiedDate: DateTimeOperator
+  lastModifiedBy: OrderByEnum
+  systemModstamp: DateTimeOperator
+  lastViewedDate: DateTimeOperator
+  lastReferencedDate: DateTimeOperator
+  sampleCheckbox__c: BooleanOperator
+  sampleCurrency__c: CurrencyOperator
+  sampleDate__c: DateOperator
+  sampleDateTime__c: DateTimeOperator
+  sampleTime__c: TimeOperator
+  sampleEmail__c: EmailOperator
+  sampleNumber__c: FloatOperator
+  samplePercent__c: PercentOperator
+  samplePhone__c: PhoneOperator
+  samplePicklist__c: PicklistOperator
+  sampleMultiPicklist__c: MultiPicklistOperator
+  sampleText__c: StringOperator
+  sampleTextArea__c: TextAreaOperator
+  sampleURL__c: URLOperator
+}
+
+input IDOperator {
+  _eq: ID
+  _neq: ID
+  _gt: ID
+  _lt: ID
+  _gte: ID
+  _lte: ID
+  _in: [ID]
+  _nin: [ID]
+}
+
+input BooleanOperator {
+  _eq: Boolean
+  _neq: Boolean
+  _gt: Boolean
+  _lt: Boolean
+  _gte: Boolean
+  _lte: Boolean
+  _in: [Boolean]
+  _nin: [Boolean]
+}
+
+input StringOperator {
+  _eq: String
+  _neq: String
+  _gt: String
+  _lt: String
+  _gte: String
+  _lte: String
+  _in: [String]
+  _nin: [String]
+}
+
+input DateTimeOperator {
+  _eq: DateTime
+  _neq: DateTime
+  _gt: DateTime
+  _lt: DateTime
+  _gte: DateTime
+  _lte: DateTime
+  _in: [DateTime]
+  _nin: [DateTime]
+}
+
+enum OrderByEnum {
+  ASC
+  DESC
+  ASC_NULLS_FIRST
+  ASC_NULLS_LAST
+  DESC_NULLS_FIRST
+  DESC_NULLS_LAST
+}
+
+input CurrencyOperator {
+  _eq: Currency
+  _neq: Currency
+  _gt: Currency
+  _lt: Currency
+  _gte: Currency
+  _lte: Currency
+  _in: [Currency]
+  _nin: [Currency]
+}
+
+input DateOperator {
+  _eq: Date
+  _neq: Date
+  _gt: Date
+  _lt: Date
+  _gte: Date
+  _lte: Date
+  _in: [Date]
+  _nin: [Date]
+}
+
+input TimeOperator {
+  _eq: Time
+  _neq: Time
+  _gt: Time
+  _lt: Time
+  _gte: Time
+  _lte: Time
+  _in: [Time]
+  _nin: [Time]
+}
+
+input EmailOperator {
+  _eq: Email
+  _neq: Email
+  _gt: Email
+  _lt: Email
+  _gte: Email
+  _lte: Email
+  _in: [Email]
+  _nin: [Email]
+}
+
+input FloatOperator {
+  _eq: Float
+  _neq: Float
+  _gt: Float
+  _lt: Float
+  _gte: Float
+  _lte: Float
+  _in: [Float]
+  _nin: [Float]
+}
+
+input PercentOperator {
+  _eq: Percent
+  _neq: Percent
+  _gt: Percent
+  _lt: Percent
+  _gte: Percent
+  _lte: Percent
+  _in: [Percent]
+  _nin: [Percent]
+}
+
+input PhoneOperator {
+  _eq: Phone
+  _neq: Phone
+  _gt: Phone
+  _lt: Phone
+  _gte: Phone
+  _lte: Phone
+  _in: [Phone]
+  _nin: [Phone]
+}
+
+input PicklistOperator {
+  _eq: Picklist
+  _neq: Picklist
+  _gt: Picklist
+  _lt: Picklist
+  _gte: Picklist
+  _lte: Picklist
+  _in: [Picklist]
+  _nin: [Picklist]
+}
+
+input MultiPicklistOperator {
+  _eq: MultiPicklist
+  _neq: MultiPicklist
+  _gt: MultiPicklist
+  _lt: MultiPicklist
+  _gte: MultiPicklist
+  _lte: MultiPicklist
+  _in: [MultiPicklist]
+  _nin: [MultiPicklist]
+  _includes: MultiPicklist
+  _excludes: MultiPicklist
+}
+
+input TextAreaOperator {
+  _eq: TextArea
+  _neq: TextArea
+  _gt: TextArea
+  _lt: TextArea
+  _gte: TextArea
+  _lte: TextArea
+  _in: [TextArea]
+  _nin: [TextArea]
+}
+
+input URLOperator {
+  _eq: URL
+  _neq: URL
+  _gt: URL
+  _lt: URL
+  _gte: URL
+  _lte: URL
+  _in: [URL]
+  _nin: [URL]
+}
+
+input Sample__cOrderBy {
+  id: OrderByEnum
+  owner: OrderByEnum
+  isDeleted: OrderByEnum
+  name: OrderByEnum
+  createdDate: OrderByEnum
+  createdBy: OrderByEnum
+  lastModifiedDate: OrderByEnum
+  lastModifiedBy: OrderByEnum
+  systemModstamp: OrderByEnum
+  lastViewedDate: OrderByEnum
+  lastReferencedDate: OrderByEnum
+  sampleCheckbox__c: OrderByEnum
+  sampleCurrency__c: OrderByEnum
+  sampleDate__c: OrderByEnum
+  sampleDateTime__c: OrderByEnum
+  sampleTime__c: OrderByEnum
+  sampleEmail__c: OrderByEnum
+  sampleNumber__c: OrderByEnum
+  samplePercent__c: OrderByEnum
+  samplePhone__c: OrderByEnum
+  samplePicklist__c: OrderByEnum
+  sampleText__c: OrderByEnum
+  sampleTextArea__c: OrderByEnum
+  sampleURL__c: OrderByEnum
+}"
+`;

@@ -11,6 +11,12 @@ import { Api } from '../sfdc/api.js';
 
 import sfdcFastifyPlugin from './sfdc-plugin.js';
 
+export interface SfdcGraphQLOptions {
+    entities: string[],
+    instanceUrl: string,
+    accessToken: string,
+}
+
 interface GraphQLQueryString {
     query?: string;
     variables?: string;
@@ -23,14 +29,17 @@ interface GraphQLParams {
     operationName?: string;
 }
 
-export function graphqlFastifyPlugin(opts: { entities: string[] }) {
-    const { entities } = opts;
+export function graphqlFastifyPlugin(opts: SfdcGraphQLOptions) {
+    const { entities, instanceUrl, accessToken } = opts;
 
     return async (fastify: FastifyInstance) => {
         let schema: GraphQLSchema | undefined;
         const queryCache = new LRU<string, DocumentNode>(100);
     
-        fastify.register(sfdcFastifyPlugin);
+        fastify.register(sfdcFastifyPlugin, {
+            instanceUrl,
+            accessToken
+        });
     
         fastify.get<{
             Params: GraphQLQueryString;
@@ -113,10 +122,10 @@ export function graphqlFastifyPlugin(opts: { entities: string[] }) {
         }
     
         async function buildSchema(api: Api): Promise<GraphQLSchema> {
-            const sObjects = await Promise.all(entities.map(api.describeSObject));
-    
+            const sObjects = await Promise.all(entities.map((entity) => api.describeSObject(entity)));
+
             const schema = entitiesToSchema({
-                entities: sObjects.map(createEntity),
+                entities: sObjects.map(sObject => createEntity(sObject)),
                 resolvers: soqlResolvers,
             });
     

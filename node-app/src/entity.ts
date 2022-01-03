@@ -47,11 +47,13 @@ export interface FieldConfig {
 
 export const enum FieldType {
     STRING = 'String',
+    ENCRYPTED_STRING = 'EncryptedString',
     BOOLEAN = 'Boolean',
     INT = 'Int',
     FLOAT = 'Float',
     DATE = 'Date',
     DATETIME = 'DateTime',
+    TIME = 'Time',
     BASE64 = 'Base64',
     ID = 'Id',
     CURRENCY = 'Currency',
@@ -72,11 +74,13 @@ export const enum FieldType {
 
 export type ScalarField =
     | BaseField<FieldType.STRING>
+    | BaseField<FieldType.ENCRYPTED_STRING>
     | BaseField<FieldType.BOOLEAN>
     | BaseField<FieldType.INT>
     | BaseField<FieldType.FLOAT>
     | BaseField<FieldType.DATE>
     | BaseField<FieldType.DATETIME>
+    | BaseField<FieldType.TIME>
     | BaseField<FieldType.BASE64>
     | BaseField<FieldType.ID>
     | BaseField<FieldType.CURRENCY>
@@ -109,11 +113,13 @@ const SOBJECT_FIELD_SCALAR_TYPE_MAPPING: {
     [type in Exclude<SObjectFieldType, 'reference'>]: ScalarField['type'];
 } = {
     string: FieldType.STRING,
+    encryptedstring: FieldType.ENCRYPTED_STRING,
     boolean: FieldType.BOOLEAN,
     int: FieldType.INT,
     double: FieldType.FLOAT,
     date: FieldType.DATE,
     datetime: FieldType.DATETIME,
+    time: FieldType.TIME,
     base64: FieldType.BASE64,
     id: FieldType.ID,
     currency: FieldType.CURRENCY,

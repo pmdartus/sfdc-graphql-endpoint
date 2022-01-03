@@ -1,12 +1,8 @@
 import Fastify, { FastifyInstance, FastifyServerOptions } from 'fastify';
 
-import { graphqlFastifyPlugin } from './graphql.js';
+import { graphqlFastifyPlugin, SfdcGraphQLOptions } from './graphql.js';
 
-export interface ServerOptions extends FastifyServerOptions {
-    entities: string[]
-}
-
-export default function(opts: ServerOptions): FastifyInstance {
+export default function(opts: FastifyServerOptions & SfdcGraphQLOptions): FastifyInstance {
     const app = Fastify(opts);
     
     app.register(graphqlFastifyPlugin(opts));

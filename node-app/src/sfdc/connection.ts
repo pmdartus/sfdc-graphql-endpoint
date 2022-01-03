@@ -1,6 +1,4 @@
-import * as path from 'node:path';
-import { URL, fileURLToPath } from 'node:url';
-import * as child_process from 'node:child_process';
+import { URL } from 'node:url';
 
 import { fetch } from 'undici';
 
@@ -49,30 +47,5 @@ export class Connection {
         }
 
         return res as T;
-    }
-
-    static getConnection(): Connection {
-        let config: ConnectionConfig;
-
-        if (process.env.INSTANCE_URL && process.env.ACCESS_TOKEN) {
-            config = {
-                accessToken: process.env.ACCESS_TOKEN,
-                instanceUrl: process.env.INSTANCE_URL,
-            };
-        } else {
-            const output = child_process.execSync('sfdx force:user:display --json', {
-                cwd: path.dirname(fileURLToPath(import.meta.url)),
-                encoding: 'utf-8',
-            });
-
-            const { accessToken, instanceUrl } = JSON.parse(output).result;
-
-            config = {
-                accessToken,
-                instanceUrl,
-            };
-        }
-
-        return new Connection(config);
     }
 }

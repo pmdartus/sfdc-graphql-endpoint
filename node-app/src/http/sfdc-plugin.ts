@@ -12,11 +12,16 @@ declare module 'fastify' {
     }
 }
 
-export default FastifyPlugin(
-    async (instance) => {
+interface SfdcPluginOptions {
+    instanceUrl: string,
+    accessToken: string,
+}
+
+export default FastifyPlugin<SfdcPluginOptions>(
+    async (instance, opts) => {
         instance.log.debug('Establishing connection with SFDC instance');
 
-        const connection = await Connection.getConnection();
+        const connection = new Connection(opts);
         const api = new Api({ connection });
 
         instance.decorate('sfdc', {
