@@ -1,0 +1,5 @@
+SELECT Id, Name, SampleCheckbox__c, SampleCurrency__c, SampleDate__c, SampleEmail__c, 
+        SampleEncryptedText__c, SampleLongTextArea__c, SampleMultiPicklist__c, SampleNumber__c,  
+        SamplePercent__c, SamplePhone__c, SamplePicklist__c, SampleRichTextArea__c, SampleText__c, 
+        SampleTextArea__c, SampleTime__c, SampleURL__c
+FROM Sample__c

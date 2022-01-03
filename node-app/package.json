@@ -1,20 +1,17 @@
 {
   "name": "sfdc-graphql",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
-  "main": "index.js",
   "type": "module",
   "scripts": {
     "clean": "rm -rf dist/",
     "lint": "eslint src/",
     "format": "prettier src/ --write",
-    "build": "tsc -b",
-    "build-schema": "node  --no-warnings ./dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc -b"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["Salesforce", "SFDC", "GraphQL"],
+  "author": "Pierre-Marie Dartus <pm@dartus.fr>",
+  "license": "MIT",
   "dependencies": {
     "fastify": "^3.25.2",
     "fastify-plugin": "^3.0.0",

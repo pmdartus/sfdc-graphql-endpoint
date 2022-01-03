@@ -10,6 +10,7 @@ import {
     FieldNode,
     GraphQLSchema,
     isObjectType,
+    ValueNode,
 } from 'graphql';
 
 import { GraphQLSortOrderValue } from './graphql.js';
@@ -23,6 +24,7 @@ import {
     SOQLConditionExpr,
     SOQLConditionExprType,
     SoqlFieldType,
+    SOQLLogicalOperator,
     SOQLOrderByItem,
     SOQLQuery,
     SOQLSelect,
@@ -108,14 +110,12 @@ function resolveQueryManyArgs(
     for (const arg of args) {
         switch (arg.name.value) {
             case 'limit': {
-                const intValue = arg.value as IntValueNode;
-                res.limit = parseInt(intValue.value);
+                res.limit = resolveValueIntNode(info, arg.value);
                 break;
             }
 
             case 'offset': {
-                const intValue = arg.value as IntValueNode;
-                res.offset = parseInt(intValue.value);
+                res.offset = resolveValueIntNode(info, arg.value);
                 break;
             }
 
@@ -144,7 +144,8 @@ function resolveConditionExpr(
     entity: Entity,
     conditionExprValue: ObjectValueNode,
 ): SOQLConditionExpr {
-    throw new Error('TODO');
+    console.log(conditionExprValue.fields, info.variableValues);
+    return undefined as any;
 
     // const isConditional = conditionExprValue.fields.some(
     //     (field) => field.name.value === '_and' || field.name.value === '_or',
@@ -169,6 +170,7 @@ function resolveConditionExpr(
     //         right,
     //     };
     // } else {
+        
     // }
 }
 
@@ -178,6 +180,7 @@ function resolveOrderBy(
     orderByValue: ObjectValueNode,
 ): SOQLOrderByItem[] {
     const { schema } = info;
+
     return orderByValue.fields.flatMap((orderByField) => {
         const entityField = entity.fields.find(
             (field) => field.gqlName === orderByField.name.value,
@@ -305,4 +308,14 @@ function getEntityByName(schema: GraphQLSchema, sfdcName: string): Entity | unde
         (type): type is GraphQLObjectType =>
             isObjectType(type) && type.extensions.sfdc?.sfdcName === sfdcName,
     )?.extensions.sfdc;
+}
+
+function resolveValueIntNode(info: GraphQLResolveInfo, value: ValueNode): number {
+    if (value.kind === Kind.VARIABLE) {
+        return info.variableValues[value.name.value] as number;
+    } else if (value.kind === Kind.INT) {
+        return parseInt(value.value);
+    } else {
+        throw new Error(`Expected int value but received ${value}`);
+    }
 }

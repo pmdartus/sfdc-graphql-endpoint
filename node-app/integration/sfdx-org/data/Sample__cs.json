@@ -1,0 +1,63 @@
+{
+    "records": [
+        {
+            "attributes": {
+                "type": "Sample__c",
+                "referenceId": "Sample__cRef1"
+            },
+            "Name": "Number Low",
+            "SampleCheckbox__c": false,
+            "SampleNumber__c": 2
+        },
+        {
+            "attributes": {
+                "type": "Sample__c",
+                "referenceId": "Sample__cRef2"
+            },
+            "Name": "Test",
+            "SampleCheckbox__c": false,
+            "SampleCurrency__c": 100,
+            "SampleDate__c": "2022-01-02",
+            "SampleEmail__c": "test@example.com",
+            "SampleEncryptedText__c": "*************pted",
+            "SampleLongTextArea__c": "This is a text area.",
+            "SampleMultiPicklist__c": "A;B",
+            "SampleNumber__c": 123,
+            "SamplePercent__c": 50,
+            "SamplePhone__c": "0123456789",
+            "SamplePicklist__c": "C",
+            "SampleRichTextArea__c": "<p>This is a <b>rich text</b>.</p>",
+            "SampleText__c": "This is a text.",
+            "SampleTextArea__c": "This is a text area.",
+            "SampleTime__c": "00:00:00.000Z",
+            "SampleURL__c": "https://example.com"
+        },
+        {
+            "attributes": {
+                "type": "Sample__c",
+                "referenceId": "Sample__cRef3"
+            },
+            "Name": "Currency Large",
+            "SampleCheckbox__c": false,
+            "SampleCurrency__c": 500
+        },
+        {
+            "attributes": {
+                "type": "Sample__c",
+                "referenceId": "Sample__cRef4"
+            },
+            "Name": "Number Large",
+            "SampleCheckbox__c": false,
+            "SampleNumber__c": 500
+        },
+        {
+            "attributes": {
+                "type": "Sample__c",
+                "referenceId": "Sample__cRef5"
+            },
+            "Name": "Currency Low",
+            "SampleCheckbox__c": false,
+            "SampleCurrency__c": 2
+        }
+    ]
+}

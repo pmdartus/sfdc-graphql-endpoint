@@ -1,5 +1,6 @@
+.DS_Store
+
 .sfdx/
-.cache/
 
 node_modules/
 dist/
