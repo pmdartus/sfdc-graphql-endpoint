@@ -1,0 +1,4 @@
+SELECT Name, Price__c, Description__c, Suspension__c, Picture_URL__c, Autonomy__c, Gender__c, 
+        (SELECT Name, Description__c, Category__c FROM Product_Family__r),
+        (SELECT Order__r.Name FROM Order_Items__r)
+FROM Product__c

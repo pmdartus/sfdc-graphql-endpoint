@@ -1,0 +1,31 @@
+{
+    "records": [
+        {
+            "attributes": {
+                "type": "Product_Family__c",
+                "referenceId": "Product_Family__Wisper"
+            },
+            "Name": "Wisper",
+            "Description__c": "The best foldable bike",
+            "Category__c": "Urban"
+        },
+        {
+            "attributes": {
+                "type": "Product_Family__c",
+                "referenceId": "Product_Family__RM"
+            },
+            "Name": "Rolling Mountain",
+            "Description__c": "Bikes made for nature.",
+            "Category__c": "Mountain"
+        },
+        {
+            "attributes": {
+                "type": "Product_Family__c",
+                "referenceId": "Product_Family__Neomov"
+            },
+            "Name": "Neomov",
+            "Description__c": "The way to go around the city.",
+            "Category__c": "Urban"
+        }
+    ]
+}

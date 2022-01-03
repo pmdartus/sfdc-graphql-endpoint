@@ -1,0 +1,10 @@
+{
+    "records": [
+        {
+            "attributes": {
+                "type": "Order__c",
+                "referenceId": "Order__cRef1"
+            }
+        }
+    ]
+}

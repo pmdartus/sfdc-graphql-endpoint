@@ -1,0 +1,28 @@
+{
+    "records": [
+        {
+            "attributes": {
+                "type": "Order_Item__c",
+                "referenceId": "Order_Item__cRef1"
+            },
+            "Order__c": "@Order__cRef1",
+            "Product__c": "@Product__cRef2"
+        },
+        {
+            "attributes": {
+                "type": "Order_Item__c",
+                "referenceId": "Order_Item__cRef2"
+            },
+            "Order__c": "@Order__cRef1",
+            "Product__c": "@Product__cRef6"
+        },
+        {
+            "attributes": {
+                "type": "Order_Item__c",
+                "referenceId": "Order_Item__cRef3"
+            },
+            "Order__c": "@Order__cRef1",
+            "Product__c": "@Product__cRef8"
+        }
+    ]
+}

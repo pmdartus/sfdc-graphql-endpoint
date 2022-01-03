@@ -8,6 +8,7 @@
     "lint": "eslint src/",
     "format": "prettier src/ --write",
     "build": "tsc -b",
+    "start": "npx nodemon --no-warnings ./dist/http/server.js",
     "test:integration": "node --experimental-vm-modules  --no-warnings ./node_modules/.bin/jest --config ./integration/jest.config.json"
   },
   "keywords": [

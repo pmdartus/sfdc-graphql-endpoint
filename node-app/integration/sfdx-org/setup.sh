@@ -10,4 +10,5 @@ sfdx force:org:create -s -f config/project-scratch-def.json -a $ORG_ALIAS
 sfdx force:source:push
 
 # Populate with some test records
-sfdx force:data:tree:import -p ./data/data-plan.json
+sfdx force:data:tree:import -p ./data/sample-plan.json
+sfdx force:data:tree:import -p ./data/ebike-plan.json

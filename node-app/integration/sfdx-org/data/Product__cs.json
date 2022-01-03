@@ -1,0 +1,112 @@
+{
+    "records": [
+        {
+            "attributes": {
+                "type": "Product__c",
+                "referenceId": "Product__cRef1"
+            },
+            "Name": "Neomov - Male frame",
+            "Product_Family__c": "@Product_Family__Neomov",
+            "Price__c": 1450,
+            "Description__c": "The new way to move around the city.",
+            "Suspension__c": false,
+            "Picture_URL__c": "https://contents.mediadecathlon.com/p2194300/k$ce581e2a27444e43923845a556b0accd/sq/velo-ville-electrique-neomouv-carlina-hydraulique-dark-blue.jpg?f=960x960",
+            "Autonomy__c": 30,
+            "Gender__c": "Male"
+        },
+        {
+            "attributes": {
+                "type": "Product__c",
+                "referenceId": "Product__cRef2"
+            },
+            "Name": "Wisper foldable - Upgraded",
+            "Product_Family__c": "@Product_Family__Wisper",
+            "Price__c": 1230,
+            "Description__c": "The very latest version of their flagship folding electric bike.",
+            "Suspension__c": false,
+            "Picture_URL__c": "https://contents.mediadecathlon.com/m1493706/k$2234cd951dcfe1905d530a1e89d8747a/sq/wisper-806-se-folding-electric-bike-2020-375wh-red.jpg?f=960x960",
+            "Autonomy__c": 25,
+            "Gender__c": "Unisex"
+        },
+        {
+            "attributes": {
+                "type": "Product__c",
+                "referenceId": "Product__cRef3"
+            },
+            "Name": "Wisper foldable",
+            "Product_Family__c": "@Product_Family__Wisper",
+            "Price__c": 1230,
+            "Description__c": "The very latest version of their flagship folding electric bike.",
+            "Suspension__c": false,
+            "Picture_URL__c": "https://contents.mediadecathlon.com/m1493706/k$2234cd951dcfe1905d530a1e89d8747a/sq/wisper-806-se-folding-electric-bike-2020-375wh-red.jpg?f=960x960",
+            "Autonomy__c": 15,
+            "Gender__c": "Unisex"
+        },
+        {
+            "attributes": {
+                "type": "Product__c",
+                "referenceId": "Product__cRef4"
+            },
+            "Name": "Rolling Mountain - Female",
+            "Product_Family__c": "@Product_Family__RM",
+            "Price__c": 2300,
+            "Description__c": "This electric mountain bike is designed for MTB rides.",
+            "Suspension__c": true,
+            "Picture_URL__c": "https://contents.mediadecathlon.com/p1866503/k$1ed73423e9c3bf72be216233c0f07d0d/sq/womens-275-electric-mountain-bike-blue.jpg?f=960x960",
+            "Autonomy__c": 45,
+            "Gender__c": "Female"
+        },
+        {
+            "attributes": {
+                "type": "Product__c",
+                "referenceId": "Product__cRef5"
+            },
+            "Name": "Neomov - Suspension",
+            "Price__c": 1850,
+            "Description__c": "The new way to move around the city.",
+            "Suspension__c": true,
+            "Picture_URL__c": "https://contents.mediadecathlon.com/p2194300/k$ce581e2a27444e43923845a556b0accd/sq/velo-ville-electrique-neomouv-carlina-hydraulique-dark-blue.jpg?f=960x960",
+            "Autonomy__c": 30,
+            "Gender__c": "Unisex"
+        },
+        {
+            "attributes": {
+                "type": "Product__c",
+                "referenceId": "Product__cRef6"
+            },
+            "Name": "Neomov - Basic",
+            "Price__c": 1450,
+            "Description__c": "The new way to move around the city.",
+            "Suspension__c": false,
+            "Picture_URL__c": "https://contents.mediadecathlon.com/p2194300/k$ce581e2a27444e43923845a556b0accd/sq/velo-ville-electrique-neomouv-carlina-hydraulique-dark-blue.jpg?f=960x960",
+            "Autonomy__c": 30,
+            "Gender__c": "Unisex"
+        },
+        {
+            "attributes": {
+                "type": "Product__c",
+                "referenceId": "Product__cRef7"
+            },
+            "Name": "Neomov - Female frame",
+            "Price__c": 1450,
+            "Description__c": "The new way to move around the city.",
+            "Suspension__c": false,
+            "Picture_URL__c": "https://contents.mediadecathlon.com/p2194300/k$ce581e2a27444e43923845a556b0accd/sq/velo-ville-electrique-neomouv-carlina-hydraulique-dark-blue.jpg?f=960x960",
+            "Autonomy__c": 30,
+            "Gender__c": "Female"
+        },
+        {
+            "attributes": {
+                "type": "Product__c",
+                "referenceId": "Product__cRef8"
+            },
+            "Name": "Rolling Mountain - Male",
+            "Price__c": 2300,
+            "Description__c": "This electric mountain bike is designed for MTB rides.",
+            "Suspension__c": true,
+            "Picture_URL__c": "https://contents.mediadecathlon.com/p1866503/k$1ed73423e9c3bf72be216233c0f07d0d/sq/womens-275-electric-mountain-bike-blue.jpg?f=960x960",
+            "Autonomy__c": 45,
+            "Gender__c": "Male"
+        }
+    ]
+}

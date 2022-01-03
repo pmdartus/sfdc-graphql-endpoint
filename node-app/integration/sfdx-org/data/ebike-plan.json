@@ -1,0 +1,34 @@
+[
+    {
+        "sobject": "Product_Family__c",
+        "saveRefs": true,
+        "resolveRefs": false,
+        "files": [
+            "Product_Family__cs.json"
+        ]
+    },
+    {
+        "sobject": "Order__c",
+        "saveRefs": true,
+        "resolveRefs": false,
+        "files": [
+            "Order__cs.json"
+        ]
+    },
+    {
+        "sobject": "Product__c",
+        "saveRefs": true,
+        "resolveRefs": true,
+        "files": [
+            "Product__cs.json"
+        ]
+    },
+    {
+        "sobject": "Order_Item__c",
+        "saveRefs": false,
+        "resolveRefs": true,
+        "files": [
+            "Order_Item__cs.json"
+        ]
+    }
+]
