@@ -55,7 +55,7 @@ export interface SOQLFieldExpr {
     type: SOQLConditionExprType.FIELD_EXPR;
     field: string;
     operator: SOQLComparisonOperator;
-    value: string;
+    value: unknown;
 }
 
 export interface SOQLLogicalExpr {
@@ -155,7 +155,7 @@ function conditionExprToString(
                 break;
         }
 
-        return `${expr.field} ${op} '${expr.value}'`;
+        return `${expr.field} ${op} ${serializeValue(expr.value)}`;
     } else {
         let op;
 
@@ -209,4 +209,18 @@ function orderByItemToString(item: SOQLOrderByItem): string {
     }
 
     return `${item.field} ${ordering}`;
+}
+
+function serializeValue(value: unknown): string {
+    if (typeof value === 'boolean') {
+        return value ? 'TRUE' : 'FALSE';
+    } else if (typeof value === 'number') {
+        return String(value);
+    } else if (typeof value === 'string') {
+        return `'${value}'`;
+    } else if (Array.isArray(value)) {
+        return `(${value.map((val) => serializeValue(val)).join(', ')})`;
+    }
+
+    return String(value);
 }

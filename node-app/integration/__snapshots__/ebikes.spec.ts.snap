@@ -57,36 +57,8 @@ exports[`eBikes entity get product list retrieve products by exact name 1`] = `
 Object {
   "Product__c": Array [
     Object {
-      "name": "Neomov - Male frame",
-      "price__c": 1450,
-    },
-    Object {
-      "name": "Wisper foldable - Upgraded",
-      "price__c": 1230,
-    },
-    Object {
-      "name": "Wisper foldable",
-      "price__c": 1230,
-    },
-    Object {
-      "name": "Rolling Mountain - Female",
-      "price__c": 2300,
-    },
-    Object {
-      "name": "Neomov - Suspension",
-      "price__c": 1850,
-    },
-    Object {
       "name": "Neomov - Basic",
       "price__c": 1450,
-    },
-    Object {
-      "name": "Neomov - Female frame",
-      "price__c": 1450,
-    },
-    Object {
-      "name": "Rolling Mountain - Male",
-      "price__c": 2300,
     },
   ],
 }
@@ -100,18 +72,6 @@ Object {
       "price__c": 1450,
     },
     Object {
-      "name": "Wisper foldable - Upgraded",
-      "price__c": 1230,
-    },
-    Object {
-      "name": "Wisper foldable",
-      "price__c": 1230,
-    },
-    Object {
-      "name": "Rolling Mountain - Female",
-      "price__c": 2300,
-    },
-    Object {
       "name": "Neomov - Suspension",
       "price__c": 1850,
     },
@@ -122,10 +82,6 @@ Object {
     Object {
       "name": "Neomov - Female frame",
       "price__c": 1450,
-    },
-    Object {
-      "name": "Rolling Mountain - Male",
-      "price__c": 2300,
     },
   ],
 }
@@ -146,25 +102,74 @@ Object {
       "name": "Neomov - Male frame",
       "price__c": 1450,
     },
+  ],
+}
+`;
+
+exports[`eBikes entity get product list retrieve products order by gender and price 1`] = `
+Object {
+  "Product__c": Array [
     Object {
-      "name": "Neomov - Suspension",
-      "price__c": 1850,
+      "gender__c": "Unisex",
+      "name": "Wisper foldable - Upgraded",
+      "price__c": 1230,
     },
     Object {
-      "name": "Rolling Mountain - Female",
-      "price__c": 2300,
-    },
-    Object {
-      "name": "Rolling Mountain - Male",
-      "price__c": 2300,
-    },
-    Object {
+      "gender__c": "Unisex",
       "name": "Wisper foldable",
       "price__c": 1230,
     },
     Object {
-      "name": "Wisper foldable - Upgraded",
-      "price__c": 1230,
+      "gender__c": "Unisex",
+      "name": "Neomov - Basic",
+      "price__c": 1450,
+    },
+    Object {
+      "gender__c": "Unisex",
+      "name": "Neomov - Suspension",
+      "price__c": 1850,
+    },
+    Object {
+      "gender__c": "Male",
+      "name": "Neomov - Male frame",
+      "price__c": 1450,
+    },
+    Object {
+      "gender__c": "Male",
+      "name": "Rolling Mountain - Male",
+      "price__c": 2300,
+    },
+    Object {
+      "gender__c": "Female",
+      "name": "Neomov - Female frame",
+      "price__c": 1450,
+    },
+    Object {
+      "gender__c": "Female",
+      "name": "Rolling Mountain - Female",
+      "price__c": 2300,
+    },
+  ],
+}
+`;
+
+exports[`eBikes entity get product list retrieve the products with suspensions 1`] = `
+Object {
+  "Product__c": Array [
+    Object {
+      "name": "Neomov - Suspension",
+      "price__c": 1850,
+      "suspension__c": true,
+    },
+    Object {
+      "name": "Rolling Mountain - Female",
+      "price__c": 2300,
+      "suspension__c": true,
+    },
+    Object {
+      "name": "Rolling Mountain - Male",
+      "price__c": 2300,
+      "suspension__c": true,
     },
   ],
 }

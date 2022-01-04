@@ -1,20 +1,25 @@
+import assert from 'node:assert';
 import {
     GraphQLResolveInfo,
     Kind,
     GraphQLObjectType,
     GraphQLFieldResolver,
     SelectionSetNode,
-    ArgumentNode,
-    IntValueNode,
-    ObjectValueNode,
     FieldNode,
     GraphQLSchema,
     isObjectType,
-    ValueNode,
+    valueFromAST,
+    GraphQLField,
 } from 'graphql';
 
 import { GraphQLSortOrderValue } from './graphql.js';
-import { Entity, isPolymorphicReference, isReferenceField, isScalarField } from './entity.js';
+import {
+    Entity,
+    Field,
+    isPolymorphicReference,
+    isReferenceField,
+    isScalarField,
+} from './entity.js';
 
 import { Api } from './sfdc/api.js';
 import { Connection } from './sfdc/connection.js';
@@ -23,6 +28,7 @@ import {
     SOQLComparisonOperator,
     SOQLConditionExpr,
     SOQLConditionExprType,
+    SOQLFieldExpr,
     SoqlFieldType,
     SOQLLogicalOperator,
     SOQLOrderByItem,
@@ -41,6 +47,29 @@ export interface ResolverContext {
 
 type SOQLQueryOptionals = Pick<SOQLQuery, 'where' | 'orderBy' | 'limit' | 'offset'>;
 
+interface OrderByValue {
+    [name: string]: GraphQLSortOrderValue | OrderByValue[];
+}
+
+type WhereValue =
+    | { _and: WhereValue[] }
+    | { _or: WhereValue[] }
+    | {
+          [name: string]: WhereValue | WhereFieldValue;
+      };
+
+interface WhereFieldValue {
+    _eq?: unknown;
+    _neq?: unknown;
+    _gt?: unknown;
+    _lt?: unknown;
+    _gte?: unknown;
+    _lte?: unknown;
+    _in?: unknown;
+    _nin?: unknown;
+    _like?: unknown;
+}
+
 const GRAPHQL_SORTING_ORDER_SOQL_MAPPING: { [name in GraphQLSortOrderValue]: SOQLSortingOrder } = {
     ASC: SOQLSortingOrder.ASC,
     DESC: SOQLSortingOrder.DESC,
@@ -48,6 +77,20 @@ const GRAPHQL_SORTING_ORDER_SOQL_MAPPING: { [name in GraphQLSortOrderValue]: SOQ
     ASC_NULLS_LAST: SOQLSortingOrder.ASC_NULLS_LAST,
     DESC_NULLS_FIRST: SOQLSortingOrder.DESC_NULLS_FIRST,
     DESC_NULLS_LAST: SOQLSortingOrder.DESC_NULLS_LAST,
+};
+
+const GRAPHQL_COMP_OPERATOR_SOQL_MAPPING: {
+    [name in Required<keyof WhereFieldValue>]: SOQLComparisonOperator;
+} = {
+    _eq: SOQLComparisonOperator.EQ,
+    _neq: SOQLComparisonOperator.NEQ,
+    _gt: SOQLComparisonOperator.GT,
+    _gte: SOQLComparisonOperator.GTE,
+    _lt: SOQLComparisonOperator.LT,
+    _lte: SOQLComparisonOperator.LTE,
+    _in: SOQLComparisonOperator.IN,
+    _nin: SOQLComparisonOperator.NIN,
+    _like: SOQLComparisonOperator.LIKE,
 };
 
 export const soqlResolvers = {
@@ -78,9 +121,12 @@ export const soqlResolvers = {
         return async (_, args, context, info) => {
             const { api, logger } = context;
 
+            const fieldType = info.parentType.getFields()[info.fieldName];
+            const fieldNode = info.fieldNodes.find((field) => field.name.value === info.fieldName)!;
+
             const selects = resolveSelection(info, entity, info.fieldNodes[0].selectionSet!);
 
-            const soqlConfig = resolveQueryManyArgs(info, entity, info.fieldNodes[0].arguments);
+            const soqlConfig = resolveQueryManyArgs(info, entity, fieldType, fieldNode);
 
             const query = queryToString({
                 selects,
@@ -99,120 +145,162 @@ export const soqlResolvers = {
 function resolveQueryManyArgs(
     info: GraphQLResolveInfo,
     entity: Entity,
-    args?: Readonly<ArgumentNode[]>,
+    fieldType: GraphQLField<unknown, ResolverContext>,
+    fieldNode: FieldNode,
 ): SOQLQueryOptionals {
     const res: SOQLQueryOptionals = {};
 
-    if (!args) {
+    if (!fieldNode.arguments) {
         return res;
     }
 
-    for (const arg of args) {
-        switch (arg.name.value) {
+    for (const argNode of fieldNode.arguments) {
+        const argName = argNode.name.value;
+        const argType = fieldType.args.find((argType) => argType.name === argName)!;
+
+        const resolvedValue = valueFromAST(argNode.value, argType.type, info.variableValues);
+
+        switch (argName) {
             case 'limit': {
-                res.limit = resolveValueIntNode(info, arg.value);
+                res.limit = resolvedValue as number;
                 break;
             }
 
             case 'offset': {
-                res.offset = resolveValueIntNode(info, arg.value);
+                res.offset = resolvedValue as number;
                 break;
             }
 
             case 'where': {
-                const objectValue = arg.value as ObjectValueNode;
-                res.where = resolveConditionExpr(info, entity, objectValue);
+                res.where = resolveWhereExpr(info, entity, resolvedValue as WhereValue);
                 break;
             }
 
             case 'order_by': {
-                const objectValue = arg.value as ObjectValueNode;
-                res.orderBy = resolveOrderBy(info, entity, objectValue);
+                res.orderBy = resolveOrderBy(info, entity, resolvedValue as OrderByValue[]);
                 break;
             }
 
             default:
-                throw new Error(`Unknown argument name ${arg.name.value}`);
+                throw new Error(`Unknown argument name ${argName}`);
         }
     }
 
     return res;
 }
 
-function resolveConditionExpr(
+function resolveWhereExpr(
     info: GraphQLResolveInfo,
     entity: Entity,
-    conditionExprValue: ObjectValueNode,
-): SOQLConditionExpr {
-    console.log(conditionExprValue.fields, info.variableValues);
-    return undefined as any;
+    whereValue: WhereValue,
+): SOQLConditionExpr | undefined {
+    const combineCondtionExprs = (
+        exprs: SOQLConditionExpr[],
+        operator: SOQLLogicalOperator,
+    ): SOQLConditionExpr | undefined => {
+        return exprs.reduceRight<SOQLConditionExpr | undefined>((acc, expr) => {
+            if (expr === undefined) {
+                return acc;
+            } else {
+                if (acc === undefined) {
+                    return expr;
+                } else {
+                    return {
+                        type: SOQLConditionExprType.LOGICAL_EXPR,
+                        operator,
+                        left: expr,
+                        right: acc,
+                    };
+                }
+            }
+        }, undefined);
+    };
 
-    // const isConditional = conditionExprValue.fields.some(
-    //     (field) => field.name.value === '_and' || field.name.value === '_or',
-    // );
+    const resolveLogicalCondition = (
+        values: WhereValue[],
+        operator: SOQLLogicalOperator,
+    ): SOQLConditionExpr | undefined => {
+        const exprs = values
+            .map((child) => resolveWhereExpr(info, entity, child))
+            .filter((expr): expr is SOQLConditionExpr => expr !== undefined);
 
-    // if (isConditional) {
-    //     if (conditionExprValue.fields.length > 1) {
-    //         // TODO: Improve error message. A conditional expression can't be associated with column
-    //         // expressions.
-    //         throw new Error('Unexpected conditional value');
-    //     }
+        return combineCondtionExprs(exprs, operator);
+    };
 
-    //     const operator =
-    //         conditionExprValue.fields[0].name.value === '_and'
-    //             ? SOQLLogicalOperator.AND
-    //             : SOQLLogicalOperator.OR;
+    if ('_and' in whereValue) {
+        return resolveLogicalCondition(whereValue._and as WhereValue[], SOQLLogicalOperator.AND);
+    } else if ('_or' in whereValue) {
+        return resolveLogicalCondition(whereValue._or as WhereValue[], SOQLLogicalOperator.OR);
+    } else {
+        const exprs: SOQLConditionExpr[] = [];
 
-    //     return {
-    //         type: SOQLConditionExprType.LOGICAL_EXPR,
-    //         operator: operator,
-    //         left,
-    //         right,
-    //     };
-    // } else {
-        
-    // }
+        for (const [fieldName, fieldValue] of Object.entries(whereValue)) {
+            const entityField = entity.fields.find((field) => field.gqlName === fieldName);
+            assert(entityField, `Can't find field ${fieldName} on ${entity.gqlName}`);
+
+            if (isScalarField(entityField)) {
+                const soqlFieldExprs = Object.entries(fieldValue).map(
+                    ([operationName, value]): SOQLFieldExpr => {
+                        const operator =
+                            GRAPHQL_COMP_OPERATOR_SOQL_MAPPING[
+                                operationName as keyof WhereFieldValue
+                            ];
+
+                        return {
+                            type: SOQLConditionExprType.FIELD_EXPR,
+                            field: entityField.sfdcName,
+                            operator,
+                            value,
+                        };
+                    },
+                );
+                exprs.push(...soqlFieldExprs);
+            } else {
+                // TODO: Handle reference field
+            }
+        }
+
+        return combineCondtionExprs(exprs, SOQLLogicalOperator.AND);
+    }
 }
 
 function resolveOrderBy(
     info: GraphQLResolveInfo,
     entity: Entity,
-    orderByValue: ObjectValueNode,
+    orderByValues: OrderByValue[],
 ): SOQLOrderByItem[] {
     const { schema } = info;
 
-    return orderByValue.fields.flatMap((orderByField) => {
-        const entityField = entity.fields.find(
-            (field) => field.gqlName === orderByField.name.value,
-        );
-        if (!entityField) {
-            throw new Error(`Can't find field ${orderByField.name.value} on ${entity.gqlName}`);
-        }
+    return orderByValues.flatMap((orderByValue) =>
+        Object.entries(orderByValue).flatMap(([fieldName, fieldValue]) => {
+            const entityField = entity.fields.find((field) => field.gqlName === fieldName);
+            assert(entityField, `Can't find field ${fieldName} on ${entity.gqlName}`);
 
-        if (orderByField.value.kind === Kind.ENUM) {
-            return {
-                field: entityField.sfdcName,
-                order: GRAPHQL_SORTING_ORDER_SOQL_MAPPING[
-                    orderByField.value.value as GraphQLSortOrderValue
-                ],
-            };
-        } else if (orderByField.value.kind === Kind.OBJECT) {
-            if (isReferenceField(entityField)) {
-                const referencedEntity = getEntityByName(schema, entityField.sfdcReferencedEntityName)!;
-                return resolveOrderBy(info, referencedEntity, orderByField.value).map(item => {
-                    return {
-                        ...item,
-                        field: `${entityField.sfdcRelationshipName}.${item.field}`
-                    }
-                });
+            if (typeof fieldValue === 'string') {
+                return {
+                    field: entityField.sfdcName,
+                    order: GRAPHQL_SORTING_ORDER_SOQL_MAPPING[fieldValue],
+                };
             } else {
-                // TODO: Handle polymorphic relationships.
-                return [];
+                if (isReferenceField(entityField)) {
+                    const referencedEntity = getEntityByName(
+                        schema,
+                        entityField.sfdcReferencedEntityName,
+                    )!;
+
+                    return resolveOrderBy(info, referencedEntity, fieldValue).map((item) => {
+                        return {
+                            ...item,
+                            field: `${entityField.sfdcRelationshipName}.${item.field}`,
+                        };
+                    });
+                } else {
+                    // TODO: Handle polymorphic relationships.
+                    return [];
+                }
             }
-        } else {
-            throw new Error('Unexpected field value kind');
-        }
-    });
+        }),
+    );
 }
 
 function resolveSelection(
@@ -231,28 +319,28 @@ function resolveSelection(
                     break;
                 }
 
-                const field = entity.fields.find(
+                const entityField = entity.fields.find(
                     (entity) => entity.gqlName === selection.name.value,
                 );
-                if (!field) {
-                    console.log(entity);
-                    throw new Error(`Unkown field ${selection.name.value} on ${entity.gqlName}`);
-                }
+                assert(entityField, `Can't find field ${selection.name.value} on ${entity.gqlName}`);
 
-                if (isScalarField(field)) {
+                if (isScalarField(entityField)) {
                     soqlSelects.push({
                         type: SoqlFieldType.FIELD,
-                        name: field.sfdcName,
+                        name: entityField.sfdcName,
                     });
-                } else if (isReferenceField(field) && selection.selectionSet) {
-                    const referenceEntity = getEntityByName(schema, field.sfdcReferencedEntityName)!;
+                } else if (isReferenceField(entityField) && selection.selectionSet) {
+                    const referenceEntity = getEntityByName(
+                        schema,
+                        entityField.sfdcReferencedEntityName,
+                    )!;
 
                     soqlSelects.push({
                         type: SoqlFieldType.REFERENCE,
-                        name: field.sfdcRelationshipName,
+                        name: entityField.sfdcRelationshipName,
                         selects: resolveSelection(info, referenceEntity, selection.selectionSet),
                     });
-                } else if (isPolymorphicReference(field) && selection.selectionSet) {
+                } else if (isPolymorphicReference(entityField) && selection.selectionSet) {
                     // TODO: Handle polymorphic relationships.
                 }
                 break;
@@ -308,14 +396,4 @@ function getEntityByName(schema: GraphQLSchema, sfdcName: string): Entity | unde
         (type): type is GraphQLObjectType =>
             isObjectType(type) && type.extensions.sfdc?.sfdcName === sfdcName,
     )?.extensions.sfdc;
-}
-
-function resolveValueIntNode(info: GraphQLResolveInfo, value: ValueNode): number {
-    if (value.kind === Kind.VARIABLE) {
-        return info.variableValues[value.name.value] as number;
-    } else if (value.kind === Kind.INT) {
-        return parseInt(value.value);
-    } else {
-        throw new Error(`Expected int value but received ${value}`);
-    }
 }

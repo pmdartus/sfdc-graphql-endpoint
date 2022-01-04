@@ -41,6 +41,22 @@ describe('eBikes entity', () => {
             expect(data).toMatchSnapshot();
         });
 
+        test('retrieve products order by gender and price', async () => {
+            const { data } = await executeQuery({
+                app,
+                query: gql`
+                    {
+                        Product__c(order_by: { gender__c: ASC, price__c: ASC }, limit: 10) {
+                            name
+                            price__c
+                            gender__c
+                        }
+                    }
+                `,
+            });
+            expect(data).toMatchSnapshot();
+        });
+
         test('retrieve more products', async () => {
             const query = gql`
                 query getProducts($offset: Int = 0) {
@@ -70,8 +86,7 @@ describe('eBikes entity', () => {
             expect(moreProducts).toMatchSnapshot('load more');
         });
 
-        // TODO: Add filtering logic
-        test.skip('retrieve the products with suspensions', async () => {
+        test('retrieve the products with suspensions', async () => {
             const { data } = await executeQuery({
                 app,
                 query: gql`
@@ -91,14 +106,13 @@ describe('eBikes entity', () => {
             expect(data).toMatchSnapshot();
         });
 
-        // TODO: Add filtering logic
-        test.skip('retrieve products in price range', async () => {
+        test('retrieve products in price range', async () => {
             const { data } = await executeQuery({
                 app,
                 query: gql`
                     {
                         Product__c(
-                            where: { price__c: { _gt: 1000, _lt: 1500 } }
+                            where: { price__c: { _gt: 1300, _lt: 1500 } }
                             order_by: { name: ASC }
                             limit: 10
                         ) {
@@ -111,8 +125,7 @@ describe('eBikes entity', () => {
             expect(data).toMatchSnapshot();
         });
 
-        // TODO: Add filtering logic
-        test.skip('retrieve products by exact name', async () => {
+        test('retrieve products by exact name', async () => {
             const { data } = await executeQuery({
                 app,
                 query: gql`
@@ -130,8 +143,7 @@ describe('eBikes entity', () => {
             expect(data).toMatchSnapshot();
         });
 
-        // TODO: Add filtering logic
-        test.skip('retrieve products by matching name', async () => {
+        test('retrieve products by matching name', async () => {
             const { data } = await executeQuery({
                 app,
                 query: gql`
