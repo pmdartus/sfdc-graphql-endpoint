@@ -1,41 +1,20 @@
+import { FastifyInstance } from 'fastify';
 import { buildClientSchema, getIntrospectionQuery, printSchema } from 'graphql';
 
-import getApp from '../src/http/app.js';
+import { gql, getApp, executeQuery } from './utils.js';
 
-import { gql } from './utils.js';
-
-const instanceUrl = process.env.INSTANCE_URL;
-const accessToken = process.env.ACCESS_TOKEN;
-
-if (!instanceUrl || !accessToken) {
-    let msg = `INSTANCE_URL and ACCESS_TOKEN environment variables must be set to run the integration tests.\n`;
-    msg += `Run "sfdx force:user:display" from the "integration/sfdx-org" directory to retrieve those informations.`;
-
-    throw new Error(msg);
-}
-
-describe('Sample entity', () => {
-    const app = getApp({
-        instanceUrl,
-        accessToken,
+let app: FastifyInstance;
+beforeAll(() => {
+    app = getApp({
         entities: ['Sample__c'],
     });
+});
 
-    async function executeQuery({ query }: { query: string }): Promise<any> {
-        const response = await app.inject({
-            method: 'POST',
-            url: '/graphql',
-            payload: {
-                query,
-            },
-        });
-
-        expect(response.statusCode).toBe(200);
-        return response.json();
-    }
+describe('Sample', () => {
 
     test('introspect schema', async () => {
         const { data } = await executeQuery({
+            app,
             query: getIntrospectionQuery({
                 schemaDescription: true,
             }),
@@ -47,6 +26,7 @@ describe('Sample entity', () => {
 
     test('retrieve all the sample records', async () => {
         const { data } = await executeQuery({
+            app,
             query: gql`
                 {
                     Sample__c(limit: 100) {
@@ -71,6 +51,7 @@ describe('Sample entity', () => {
 
     test('retrieve 2 records', async () => {
         const { data } = await executeQuery({
+            app,
             query: gql`
                 {
                     Sample__c(limit: 2) {
@@ -85,6 +66,7 @@ describe('Sample entity', () => {
 
     test('retrieve records ordered by name ASC', async () => {
         const { data } = await executeQuery({
+            app,
             query: gql`
                 {
                     Sample__c(limit: 10, order_by: { name: ASC }) {
@@ -100,6 +82,7 @@ describe('Sample entity', () => {
 
     test('retrieve records ordered by name DESC', async () => {
         const { data } = await executeQuery({
+            app,
             query: gql`
                 {
                     Sample__c(limit: 10, order_by: { name: DESC }) {
@@ -116,6 +99,7 @@ describe('Sample entity', () => {
     // TODO: Fix me, something is wrong with the offset.
     test.skip('retrieve next record using offset', async () => {
         const fetchAllRes = await executeQuery({
+            app,
             query: gql`
                 {
                     Sample__c(limit: 4) {
@@ -130,6 +114,7 @@ describe('Sample entity', () => {
         );
 
         const fetchFirstRes = await executeQuery({
+            app,
             query: gql`
                 {
                     Sample__c(limit: 1, offset: 0) {
@@ -142,6 +127,7 @@ describe('Sample entity', () => {
         expect(fetchFirstRes.data.Sample__c[0].id).toBe(firstRecordId);
 
         const fetchNextRes = await executeQuery({
+            app,
             query: gql`
                 {
                     Sample__c(limit: 1, offset: 0) {

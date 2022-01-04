@@ -155,7 +155,7 @@ function conditionExprToString(
                 break;
         }
 
-        return `${expr.field} ${op} ${expr.value}`;
+        return `${expr.field} ${op} '${expr.value}'`;
     } else {
         let op;
 

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Sample entity introspect schema 1`] = `
+exports[`Sample introspect schema 1`] = `
 "type Sample__c {
   id: ID!
   owner: ID!
@@ -15,20 +15,20 @@ exports[`Sample entity introspect schema 1`] = `
   lastReferencedDate: DateTime
   sampleCheckbox__c: Boolean!
   sampleCurrency__c: Currency
-  sampleDate__c: Date
   sampleDateTime__c: DateTime
-  sampleTime__c: Time
+  sampleDate__c: Date
   sampleEmail__c: Email
+  sampleEncryptedText__c: EncryptedString
+  sampleLongTextArea__c: TextArea
+  sampleMultiPicklist__c: MultiPicklist
   sampleNumber__c: Float
   samplePercent__c: Percent
   samplePhone__c: Phone
   samplePicklist__c: Picklist
-  sampleMultiPicklist__c: MultiPicklist
-  sampleText__c: String
-  sampleEncryptedText__c: EncryptedString
-  sampleTextArea__c: TextArea
-  sampleLongTextArea__c: TextArea
   sampleRichTextArea__c: TextArea
+  sampleTextArea__c: TextArea
+  sampleText__c: String
+  sampleTime__c: Time
   sampleURL__c: URL
 }
 
@@ -38,9 +38,13 @@ scalar Currency
 
 scalar Date
 
-scalar Time
-
 scalar Email
+
+scalar EncryptedString
+
+scalar TextArea
+
+scalar MultiPicklist
 
 scalar Percent
 
@@ -48,11 +52,7 @@ scalar Phone
 
 scalar Picklist
 
-scalar MultiPicklist
-
-scalar EncryptedString
-
-scalar TextArea
+scalar Time
 
 scalar URL
 
@@ -76,17 +76,17 @@ input Sample__cColumnExpr {
   lastReferencedDate: DateTimeOperator
   sampleCheckbox__c: BooleanOperator
   sampleCurrency__c: CurrencyOperator
-  sampleDate__c: DateOperator
   sampleDateTime__c: DateTimeOperator
-  sampleTime__c: TimeOperator
+  sampleDate__c: DateOperator
   sampleEmail__c: EmailOperator
+  sampleMultiPicklist__c: MultiPicklistOperator
   sampleNumber__c: FloatOperator
   samplePercent__c: PercentOperator
   samplePhone__c: PhoneOperator
   samplePicklist__c: PicklistOperator
-  sampleMultiPicklist__c: MultiPicklistOperator
-  sampleText__c: StringOperator
   sampleTextArea__c: TextAreaOperator
+  sampleText__c: StringOperator
+  sampleTime__c: TimeOperator
   sampleURL__c: URLOperator
 }
 
@@ -121,6 +121,7 @@ input StringOperator {
   _lte: String
   _in: [String]
   _nin: [String]
+  _like: String
 }
 
 input DateTimeOperator {
@@ -165,17 +166,6 @@ input DateOperator {
   _nin: [Date]
 }
 
-input TimeOperator {
-  _eq: Time
-  _neq: Time
-  _gt: Time
-  _lt: Time
-  _gte: Time
-  _lte: Time
-  _in: [Time]
-  _nin: [Time]
-}
-
 input EmailOperator {
   _eq: Email
   _neq: Email
@@ -185,6 +175,19 @@ input EmailOperator {
   _lte: Email
   _in: [Email]
   _nin: [Email]
+}
+
+input MultiPicklistOperator {
+  _eq: MultiPicklist
+  _neq: MultiPicklist
+  _gt: MultiPicklist
+  _lt: MultiPicklist
+  _gte: MultiPicklist
+  _lte: MultiPicklist
+  _in: [MultiPicklist]
+  _nin: [MultiPicklist]
+  _includes: MultiPicklist
+  _excludes: MultiPicklist
 }
 
 input FloatOperator {
@@ -231,19 +234,6 @@ input PicklistOperator {
   _nin: [Picklist]
 }
 
-input MultiPicklistOperator {
-  _eq: MultiPicklist
-  _neq: MultiPicklist
-  _gt: MultiPicklist
-  _lt: MultiPicklist
-  _gte: MultiPicklist
-  _lte: MultiPicklist
-  _in: [MultiPicklist]
-  _nin: [MultiPicklist]
-  _includes: MultiPicklist
-  _excludes: MultiPicklist
-}
-
 input TextAreaOperator {
   _eq: TextArea
   _neq: TextArea
@@ -253,6 +243,17 @@ input TextAreaOperator {
   _lte: TextArea
   _in: [TextArea]
   _nin: [TextArea]
+}
+
+input TimeOperator {
+  _eq: Time
+  _neq: Time
+  _gt: Time
+  _lt: Time
+  _gte: Time
+  _lte: Time
+  _in: [Time]
+  _nin: [Time]
 }
 
 input URLOperator {
@@ -280,16 +281,16 @@ input Sample__cOrderBy {
   lastReferencedDate: OrderByEnum
   sampleCheckbox__c: OrderByEnum
   sampleCurrency__c: OrderByEnum
-  sampleDate__c: OrderByEnum
   sampleDateTime__c: OrderByEnum
-  sampleTime__c: OrderByEnum
+  sampleDate__c: OrderByEnum
   sampleEmail__c: OrderByEnum
   sampleNumber__c: OrderByEnum
   samplePercent__c: OrderByEnum
   samplePhone__c: OrderByEnum
   samplePicklist__c: OrderByEnum
-  sampleText__c: OrderByEnum
   sampleTextArea__c: OrderByEnum
+  sampleText__c: OrderByEnum
+  sampleTime__c: OrderByEnum
   sampleURL__c: OrderByEnum
 }"
 `;

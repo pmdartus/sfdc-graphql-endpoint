@@ -308,7 +308,7 @@ function createInputOperator({ type }: { type: GraphQLScalarType }): GraphQLInpu
     if (name === 'MultiPicklist') {
         fields._includes = { type };
         fields._excludes = { type };
-    } else if (name === 'Text') {
+    } else if (name === 'String') {
         fields._like = { type };
     }
 
