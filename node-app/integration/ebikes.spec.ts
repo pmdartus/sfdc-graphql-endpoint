@@ -74,7 +74,7 @@ describe('eBikes entity', () => {
                     offset: 0,
                 },
             });
-            expect(initialProducts).toMatchSnapshot('initial');
+            expect(initialProducts).toMatchSnapshot();
 
             const { data: moreProducts } = await executeQuery({
                 app,
@@ -83,7 +83,7 @@ describe('eBikes entity', () => {
                     offset: 2,
                 },
             });
-            expect(moreProducts).toMatchSnapshot('load more');
+            expect(moreProducts).toMatchSnapshot();
         });
 
         test('retrieve the products with suspensions', async () => {
@@ -130,10 +130,7 @@ describe('eBikes entity', () => {
                 app,
                 query: gql`
                     {
-                        Product__c(
-                            where: { name: { _eq: "Neomov - Basic" } }
-                            limit: 10
-                        ) {
+                        Product__c(where: { name: { _eq: "Neomov - Basic" } }, limit: 10) {
                             name
                             price__c
                         }
@@ -148,12 +145,30 @@ describe('eBikes entity', () => {
                 app,
                 query: gql`
                     {
+                        Product__c(where: { name: { _like: "Neomov%" } }, limit: 10) {
+                            name
+                            price__c
+                        }
+                    }
+                `,
+            });
+            expect(data).toMatchSnapshot();
+        });
+
+        test('retrieve the products with the "Rolling Mountain" family name', async () => {
+            const { data } = await executeQuery({
+                app,
+                query: gql`
+                    {
                         Product__c(
-                            where: { name: { _like: "Neomov%" } }
+                            where: { product_Family__r: { name: { _eq: "Rolling Mountain" } } }
                             limit: 10
                         ) {
                             name
                             price__c
+                            product_Family__r {
+                                name
+                            }
                         }
                     }
                 `,

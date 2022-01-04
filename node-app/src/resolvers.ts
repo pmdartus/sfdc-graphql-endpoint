@@ -15,7 +15,6 @@ import {
 import { GraphQLSortOrderValue } from './graphql.js';
 import {
     Entity,
-    Field,
     isPolymorphicReference,
     isReferenceField,
     isScalarField,
@@ -193,8 +192,11 @@ function resolveWhereExpr(
     info: GraphQLResolveInfo,
     entity: Entity,
     whereValue: WhereValue,
+    columnPrefix = '',
 ): SOQLConditionExpr | undefined {
-    const combineCondtionExprs = (
+    const { schema } = info;
+
+    const combineConditionExprs = (
         exprs: SOQLConditionExpr[],
         operator: SOQLLogicalOperator,
     ): SOQLConditionExpr | undefined => {
@@ -224,7 +226,7 @@ function resolveWhereExpr(
             .map((child) => resolveWhereExpr(info, entity, child))
             .filter((expr): expr is SOQLConditionExpr => expr !== undefined);
 
-        return combineCondtionExprs(exprs, operator);
+        return combineConditionExprs(exprs, operator);
     };
 
     if ('_and' in whereValue) {
@@ -248,7 +250,7 @@ function resolveWhereExpr(
 
                         return {
                             type: SOQLConditionExprType.FIELD_EXPR,
-                            field: entityField.sfdcName,
+                            field: columnPrefix + entityField.sfdcName,
                             operator,
                             value,
                         };
@@ -256,11 +258,29 @@ function resolveWhereExpr(
                 );
                 exprs.push(...soqlFieldExprs);
             } else {
-                // TODO: Handle reference field
+                if (isReferenceField(entityField)) {
+                    const referencedEntity = getEntityByName(
+                        schema,
+                        entityField.sfdcReferencedEntityName,
+                    )!;
+
+                    const expr = resolveWhereExpr(
+                        info,
+                        referencedEntity,
+                        fieldValue as WhereValue,
+                        `${entityField.sfdcRelationshipName}.`,
+                    );
+
+                    if (expr) {
+                        exprs.push(expr);
+                    }
+                } else {
+                    // TODO: Handle polymorphic relationships.
+                }
             }
         }
 
-        return combineCondtionExprs(exprs, SOQLLogicalOperator.AND);
+        return combineConditionExprs(exprs, SOQLLogicalOperator.AND);
     }
 }
 
@@ -268,6 +288,7 @@ function resolveOrderBy(
     info: GraphQLResolveInfo,
     entity: Entity,
     orderByValues: OrderByValue[],
+    columnPrefix = '',
 ): SOQLOrderByItem[] {
     const { schema } = info;
 
@@ -278,7 +299,7 @@ function resolveOrderBy(
 
             if (typeof fieldValue === 'string') {
                 return {
-                    field: entityField.sfdcName,
+                    field: columnPrefix + entityField.sfdcName,
                     order: GRAPHQL_SORTING_ORDER_SOQL_MAPPING[fieldValue],
                 };
             } else {
@@ -288,12 +309,7 @@ function resolveOrderBy(
                         entityField.sfdcReferencedEntityName,
                     )!;
 
-                    return resolveOrderBy(info, referencedEntity, fieldValue).map((item) => {
-                        return {
-                            ...item,
-                            field: `${entityField.sfdcRelationshipName}.${item.field}`,
-                        };
-                    });
+                    return resolveOrderBy(info, referencedEntity, fieldValue, `${entityField.sfdcRelationshipName}.`);
                 } else {
                     // TODO: Handle polymorphic relationships.
                     return [];
@@ -322,7 +338,10 @@ function resolveSelection(
                 const entityField = entity.fields.find(
                     (entity) => entity.gqlName === selection.name.value,
                 );
-                assert(entityField, `Can't find field ${selection.name.value} on ${entity.gqlName}`);
+                assert(
+                    entityField,
+                    `Can't find field ${selection.name.value} on ${entity.gqlName}`,
+                );
 
                 if (isScalarField(entityField)) {
                     soqlSelects.push({

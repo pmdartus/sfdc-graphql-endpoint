@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`eBikes entity get product list retrieve more products: initial 1`] = `
+exports[`eBikes entity get product list retrieve more products 1`] = `
 Object {
   "Product__c": Array [
     Object {
@@ -15,7 +15,7 @@ Object {
 }
 `;
 
-exports[`eBikes entity get product list retrieve more products: load more 1`] = `
+exports[`eBikes entity get product list retrieve more products 2`] = `
 Object {
   "Product__c": Array [
     Object {
@@ -170,6 +170,20 @@ Object {
       "name": "Rolling Mountain - Male",
       "price__c": 2300,
       "suspension__c": true,
+    },
+  ],
+}
+`;
+
+exports[`eBikes entity get product list retrieve the products with the "Rolling Mountain" family name 1`] = `
+Object {
+  "Product__c": Array [
+    Object {
+      "name": "Rolling Mountain - Female",
+      "price__c": 2300,
+      "product_Family__r": Object {
+        "name": "Rolling Mountain",
+      },
     },
   ],
 }
