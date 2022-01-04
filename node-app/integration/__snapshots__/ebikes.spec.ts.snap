@@ -68,20 +68,20 @@ exports[`eBikes entity get product list retrieve products by matching name 1`] =
 Object {
   "Product__c": Array [
     Object {
-      "name": "Neomov - Male frame",
-      "price__c": 1450,
-    },
-    Object {
-      "name": "Neomov - Suspension",
-      "price__c": 1850,
-    },
-    Object {
       "name": "Neomov - Basic",
       "price__c": 1450,
     },
     Object {
       "name": "Neomov - Female frame",
       "price__c": 1450,
+    },
+    Object {
+      "name": "Neomov - Male frame",
+      "price__c": 1450,
+    },
+    Object {
+      "name": "Neomov - Suspension",
+      "price__c": 1850,
     },
   ],
 }
@@ -101,6 +101,33 @@ Object {
     Object {
       "name": "Neomov - Male frame",
       "price__c": 1450,
+    },
+  ],
+}
+`;
+
+exports[`eBikes entity get product list retrieve products male or female products only 1`] = `
+Object {
+  "Product__c": Array [
+    Object {
+      "gender__c": "Female",
+      "name": "Neomov - Female frame",
+      "price__c": 1450,
+    },
+    Object {
+      "gender__c": "Male",
+      "name": "Neomov - Male frame",
+      "price__c": 1450,
+    },
+    Object {
+      "gender__c": "Female",
+      "name": "Rolling Mountain - Female",
+      "price__c": 2300,
+    },
+    Object {
+      "gender__c": "Male",
+      "name": "Rolling Mountain - Male",
+      "price__c": 2300,
     },
   ],
 }

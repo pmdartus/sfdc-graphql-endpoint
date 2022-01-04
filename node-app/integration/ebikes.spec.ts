@@ -130,7 +130,11 @@ describe('eBikes entity', () => {
                 app,
                 query: gql`
                     {
-                        Product__c(where: { name: { _eq: "Neomov - Basic" } }, limit: 10) {
+                        Product__c(
+                            where: { name: { _eq: "Neomov - Basic" } }
+                            order_by: { name: ASC }
+                            limit: 10
+                        ) {
                             name
                             price__c
                         }
@@ -145,9 +149,33 @@ describe('eBikes entity', () => {
                 app,
                 query: gql`
                     {
-                        Product__c(where: { name: { _like: "Neomov%" } }, limit: 10) {
+                        Product__c(
+                            where: { name: { _like: "Neomov%" } }
+                            order_by: { name: ASC }
+                            limit: 10
+                        ) {
                             name
                             price__c
+                        }
+                    }
+                `,
+            });
+            expect(data).toMatchSnapshot();
+        });
+
+        test('retrieve products male or female products only', async () => {
+            const { data } = await executeQuery({
+                app,
+                query: gql`
+                    {
+                        Product__c(
+                            where: { gender__c: { _in: ["Male", "Female"] } }
+                            order_by: { name: ASC }
+                            limit: 10
+                        ) {
+                            name
+                            price__c
+                            gender__c
                         }
                     }
                 `,
@@ -162,6 +190,7 @@ describe('eBikes entity', () => {
                     {
                         Product__c(
                             where: { product_Family__r: { name: { _eq: "Rolling Mountain" } } }
+                            order_by: { name: ASC }
                             limit: 10
                         ) {
                             name
