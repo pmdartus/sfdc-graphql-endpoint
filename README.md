@@ -101,7 +101,7 @@ npm run build
 The dev server requires `ACCESS_TOKEN` and `INSTANCE_URL` environment variables to be set prior to running the command. When targeting a scratch org instance, you can run: `sfdx force:user:display`
 
 ```sh
-ACCESS_TOKEN=<salesforce access token> INSTANCE_URL=<org instance url> npm run start
+ACCESS_TOKEN=[salesforce_access_token] INSTANCE_URL=[org_instance_url] npm run start
 ```
 
 **Running integration tests:**
