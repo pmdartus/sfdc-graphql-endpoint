@@ -1,0 +1,301 @@
+{
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app",
+    "isDirectory": true,
+    "size": 96,
+    "modifiedTime": 1641187087659,
+    "changeTime": 1641187087659,
+    "contentHash": "b28b7af69320201d1cf206ebf28373980add1451",
+    "state": "u",
+    "isArtifactRoot": true,
+    "package": "force-app"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main",
+    "isDirectory": true,
+    "size": 96,
+    "modifiedTime": 1641187087660,
+    "changeTime": 1641187087660,
+    "contentHash": "7505d64a54e061b7acd54ccd58b49dc43500b635",
+    "state": "u",
+    "package": "force-app"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default",
+    "isDirectory": true,
+    "size": 96,
+    "modifiedTime": 1641187091644,
+    "changeTime": 1641187091644,
+    "contentHash": "f0f7f39ec7e62249ee81dac2c3f1b3586a4fd52e",
+    "state": "u",
+    "package": "force-app"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects",
+    "isDirectory": true,
+    "size": 160,
+    "modifiedTime": 1641187087665,
+    "changeTime": 1641187087665,
+    "contentHash": "2dd984241f3b307042c108208d16454d414737e9",
+    "state": "u",
+    "package": "force-app"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ChildLookup__c": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ChildLookup__c",
+    "isDirectory": true,
+    "size": 128,
+    "modifiedTime": 1641187087663,
+    "changeTime": 1641187087663,
+    "contentHash": "4ca5e8d4b1aae93b14779ea6343747628c330ed7",
+    "state": "u",
+    "package": "force-app"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ChildLookup__c/ChildLookup__c.object-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ChildLookup__c/ChildLookup__c.object-meta.xml",
+    "size": 5244,
+    "modifiedTime": 1641187087662,
+    "changeTime": 1641187087662,
+    "contentHash": "1f7566dcfcbb8dae2aed43e2df3a5a064f24391a",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomObject"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ChildLookup__c/fields": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ChildLookup__c/fields",
+    "isDirectory": true,
+    "size": 96,
+    "modifiedTime": 1641187087663,
+    "changeTime": 1641187087663,
+    "contentHash": "9ef49ce9b878da6be0a14efbc84a780038ca820e",
+    "state": "u",
+    "package": "force-app"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ChildLookup__c/fields/parent__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ChildLookup__c/fields/parent__c.field-meta.xml",
+    "size": 571,
+    "modifiedTime": 1641187087663,
+    "changeTime": 1641187087664,
+    "contentHash": "780524f211ab653a1b7029fcb70898baaf8470eb",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ParentLookup__c": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ParentLookup__c",
+    "isDirectory": true,
+    "size": 96,
+    "modifiedTime": 1641187087664,
+    "changeTime": 1641187087664,
+    "contentHash": "2ebb1fb2522fb23712561b33575abd8a636f5d38",
+    "state": "u",
+    "package": "force-app"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ParentLookup__c/ParentLookup__c.object-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ParentLookup__c/ParentLookup__c.object-meta.xml",
+    "size": 5248,
+    "modifiedTime": 1641187087664,
+    "changeTime": 1641187087665,
+    "contentHash": "5306bca75075774005e0497aabad1a91df9c4e3a",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomObject"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c",
+    "isDirectory": true,
+    "size": 128,
+    "modifiedTime": 1641187087667,
+    "changeTime": 1641187087667,
+    "contentHash": "bc20c1d2b272154e5fc124d64410728dcb872914",
+    "state": "u",
+    "package": "force-app"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/ScalarEntity__c.object-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/ScalarEntity__c.object-meta.xml",
+    "size": 5254,
+    "modifiedTime": 1641187087666,
+    "changeTime": 1641187087666,
+    "contentHash": "f84224163ebd1d4a2472fdb52a5d254f5723afe0",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomObject"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields",
+    "isDirectory": true,
+    "size": 512,
+    "modifiedTime": 1641187087677,
+    "changeTime": 1641187087677,
+    "contentHash": "c5f77c6b5d716239c7ca88e822379e18d5ce551b",
+    "state": "u",
+    "package": "force-app"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/CheckboxField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/CheckboxField__c.field-meta.xml",
+    "size": 391,
+    "modifiedTime": 1641187087667,
+    "changeTime": 1641187087667,
+    "contentHash": "9e9145ddf67cf1d75d25ba523fe63df1fb287189",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/CurrencyField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/CurrencyField__c.field-meta.xml",
+    "size": 434,
+    "modifiedTime": 1641187087669,
+    "changeTime": 1641187087669,
+    "contentHash": "905991cadba276341ed92bac0393eb5eab47b40c",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/DateField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/DateField__c.field-meta.xml",
+    "size": 371,
+    "modifiedTime": 1641187087669,
+    "changeTime": 1641187087669,
+    "contentHash": "6037baf6219f6e735406696dc3230b170a9ae1d7",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/DateTimeField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/DateTimeField__c.field-meta.xml",
+    "size": 386,
+    "modifiedTime": 1641187087671,
+    "changeTime": 1641187087671,
+    "contentHash": "23f235a0626ad4aa05f35a70a949997abb3b66df",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/EmailField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/EmailField__c.field-meta.xml",
+    "size": 397,
+    "modifiedTime": 1641187087671,
+    "changeTime": 1641187087671,
+    "contentHash": "7995598849729b7700979cfeb0a03fbba9410503",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/EncryptedTextField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/EncryptedTextField__c.field-meta.xml",
+    "size": 497,
+    "modifiedTime": 1641187087672,
+    "changeTime": 1641187087672,
+    "contentHash": "267014c31db2a5366742b47c9e69a749a79ef922",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/MultiPicklistField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/MultiPicklistField__c.field-meta.xml",
+    "size": 1074,
+    "modifiedTime": 1641187087673,
+    "changeTime": 1641187087673,
+    "contentHash": "1339992254f11406df26048c2ff1d0584f420e86",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/NumberField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/NumberField__c.field-meta.xml",
+    "size": 453,
+    "modifiedTime": 1641187087673,
+    "changeTime": 1641187087674,
+    "contentHash": "814ddec1a849bd9ececf988225820fbf49585756",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/PercentField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/PercentField__c.field-meta.xml",
+    "size": 430,
+    "modifiedTime": 1641187087674,
+    "changeTime": 1641187087674,
+    "contentHash": "72095cb51d6a727060e04b5196727336a48dea49",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/PhoneField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/PhoneField__c.field-meta.xml",
+    "size": 371,
+    "modifiedTime": 1641187087675,
+    "changeTime": 1641187087675,
+    "contentHash": "706d0c10e4e15a553df13ff99e77cb9f7eee84b2",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/PicklistField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/PicklistField__c.field-meta.xml",
+    "size": 1012,
+    "modifiedTime": 1641187087676,
+    "changeTime": 1641187087676,
+    "contentHash": "297f30a6cfefae168fdf20512e24552b8144317d",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/RichTextField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/RichTextField__c.field-meta.xml",
+    "size": 412,
+    "modifiedTime": 1641187087676,
+    "changeTime": 1641187087676,
+    "contentHash": "b813bc4fe2032cfc2939b53e297d59ab79de557a",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/TextAreaField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/TextAreaField__c.field-meta.xml",
+    "size": 419,
+    "modifiedTime": 1641187087677,
+    "changeTime": 1641187087677,
+    "contentHash": "943a52a5216ccdb119ffebe62d902835b376b620",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/URLField__c.field-meta.xml": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org/force-app/main/default/objects/ScalarEntity__c/fields/URLField__c.field-meta.xml",
+    "size": 363,
+    "modifiedTime": 1641187087677,
+    "changeTime": 1641187087677,
+    "contentHash": "8ec48f60f8988be31829562c2c27a5a6707bb8f9",
+    "isMetadataFile": true,
+    "state": "u",
+    "package": "force-app",
+    "metadataType": "CustomField"
+  },
+  "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org": {
+    "sourcePath": "/Users/p.dartus/code/_tmp/sfdc-graphql/sfdc-graphql/node-app/integration/sfdx-org",
+    "isDirectory": true,
+    "size": 288,
+    "modifiedTime": 1641187432132,
+    "changeTime": 1641187432132,
+    "contentHash": "5475a6e38f50b77cf25d9c38f6b2e782ff8adbcf",
+    "state": "u",
+    "isWorkspace": true
+  }
+}
