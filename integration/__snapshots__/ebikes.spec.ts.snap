@@ -217,7 +217,7 @@ Object {
 `;
 
 exports[`eBikes entity introspection introspect schema 1`] = `
-"type Product__c {
+"type Product__c implements Entity {
   Id: ID!
   OwnerId: ID!
   IsDeleted: Boolean!
@@ -238,6 +238,11 @@ exports[`eBikes entity introspection introspect schema 1`] = `
   Suspension__c: Boolean!
 }
 
+interface Entity {
+  Id: ID
+  Name: String
+}
+
 scalar DateTime
 
 scalar TextArea
@@ -248,7 +253,7 @@ scalar URL
 
 scalar Currency
 
-type Product_Family__c {
+type Product_Family__c implements Entity {
   Id: ID!
   OwnerId: ID!
   IsDeleted: Boolean!
@@ -264,7 +269,7 @@ type Product_Family__c {
   Description__c: TextArea
 }
 
-type Order_Item__c {
+type Order_Item__c implements Entity {
   Id: ID!
   IsDeleted: Boolean!
   Name: String!
@@ -279,7 +284,7 @@ type Order_Item__c {
   Product__c: Product__c!
 }
 
-type Order__c {
+type Order__c implements Entity {
   Id: ID!
   OwnerId: ID!
   IsDeleted: Boolean!

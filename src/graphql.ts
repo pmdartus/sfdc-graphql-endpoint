@@ -8,6 +8,7 @@ import {
     GraphQLInputFieldConfig,
     GraphQLInputObjectType,
     GraphQLInt,
+    GraphQLInterfaceType,
     GraphQLList,
     GraphQLNonNull,
     GraphQLObjectType,
@@ -53,6 +54,18 @@ interface State {
     columnExprTypes: Map<string, GraphQLInputObjectType>;
     orderByTypes: Map<string, GraphQLList<GraphQLInputObjectType>>;
 }
+
+const ENTITY_INTERFACE = new GraphQLInterfaceType({
+    name: 'Entity',
+    fields: {
+        Id: {
+            type: GraphQLID,
+        },
+        Name: {
+            type: GraphQLString
+        }
+    }
+})
 
 const SCALAR_TYPES_MAPPING: { [type in ScalarField['type']]: GraphQLScalarType } = {
     // Builtin GraphQL scalars
@@ -154,6 +167,7 @@ function createGraphQLEntityType(state: State, entity: Entity): GraphQLObjectTyp
                 fields.map((field) => [field.name, createGraphQLEntityField(state, field)]),
             );
         },
+        interfaces: [ENTITY_INTERFACE],
         extensions: {
             sfdc: entity,
         },

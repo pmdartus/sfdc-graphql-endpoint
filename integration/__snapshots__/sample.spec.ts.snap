@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Sample introspect schema 1`] = `
-"type Sample__c {
+"type Sample__c implements Entity {
   Id: ID!
   OwnerId: ID!
   IsDeleted: Boolean!
@@ -30,6 +30,11 @@ exports[`Sample introspect schema 1`] = `
   SampleText__c: String
   SampleTime__c: Time
   SampleURL__c: URL
+}
+
+interface Entity {
+  Id: ID
+  Name: String
 }
 
 scalar DateTime
