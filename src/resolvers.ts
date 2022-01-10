@@ -2,26 +2,24 @@ import assert from 'node:assert';
 import {
     GraphQLResolveInfo,
     Kind,
-    GraphQLObjectType,
     GraphQLFieldResolver,
     SelectionSetNode,
     FieldNode,
-    GraphQLSchema,
-    isObjectType,
     valueFromAST,
     GraphQLField,
 } from 'graphql';
 
 import { GraphQLSortOrderValue } from './graphql.js';
+
+import { Api } from './sfdc/api.js';
+import { Connection } from './sfdc/connection.js';
 import {
     Entity,
     isPolymorphicReference,
     isReferenceField,
     isScalarField,
-} from './entity.js';
-
-import { Api } from './sfdc/api.js';
-import { Connection } from './sfdc/connection.js';
+    SfdcSchema,
+} from './sfdc/schema.js';
 import {
     queryToString,
     SOQLComparisonOperator,
@@ -93,11 +91,16 @@ const GRAPHQL_COMP_OPERATOR_SOQL_MAPPING: {
 };
 
 export const soqlResolvers = {
-    query(entity: Entity): GraphQLFieldResolver<unknown, ResolverContext> {
+    query(entity: Entity, sfdcSchema: SfdcSchema): GraphQLFieldResolver<unknown, ResolverContext> {
         return async (_, args, context, info) => {
             const { api, logger } = context;
 
-            const selects = resolveSelection(info, entity, info.fieldNodes[0].selectionSet!);
+            const selects = resolveSelection(
+                info,
+                entity,
+                sfdcSchema,
+                info.fieldNodes[0].selectionSet!,
+            );
 
             const queryString = queryToString({
                 selects,
@@ -116,14 +119,22 @@ export const soqlResolvers = {
             return result.records[0];
         };
     },
-    queryMany(entity: Entity): GraphQLFieldResolver<unknown, ResolverContext> {
+    queryMany(
+        entity: Entity,
+        sfdcSchema: SfdcSchema,
+    ): GraphQLFieldResolver<unknown, ResolverContext> {
         return async (_, args, context, info) => {
             const { api, logger } = context;
 
             const fieldType = info.parentType.getFields()[info.fieldName];
             const fieldNode = info.fieldNodes.find((field) => field.name.value === info.fieldName)!;
 
-            const selects = resolveSelection(info, entity, info.fieldNodes[0].selectionSet!);
+            const selects = resolveSelection(
+                info,
+                entity,
+                sfdcSchema,
+                info.fieldNodes[0].selectionSet!,
+            );
 
             const soqlConfig = resolveQueryManyArgs(info, entity, fieldType, fieldNode);
 
@@ -194,8 +205,6 @@ function resolveWhereExpr(
     whereValue: WhereValue,
     columnPrefix = '',
 ): SOQLConditionExpr | undefined {
-    const { schema } = info;
-
     const combineConditionExprs = (
         exprs: SOQLConditionExpr[],
         operator: SOQLLogicalOperator,
@@ -259,16 +268,11 @@ function resolveWhereExpr(
                 exprs.push(...soqlFieldExprs);
             } else {
                 if (isReferenceField(entityField)) {
-                    const referencedEntity = getEntityByName(
-                        schema,
-                        entityField.sfdcReferencedEntityName,
-                    )!;
-
                     const expr = resolveWhereExpr(
                         info,
-                        referencedEntity,
+                        entityField.referencedEntity!,
                         fieldValue as WhereValue,
-                        `${entityField.sfdcRelationshipName}.`,
+                        `${entityField.relationshipName}.`,
                     );
 
                     if (expr) {
@@ -290,8 +294,6 @@ function resolveOrderBy(
     orderByValues: OrderByValue[],
     columnPrefix = '',
 ): SOQLOrderByItem[] {
-    const { schema } = info;
-
     return orderByValues.flatMap((orderByValue) =>
         Object.entries(orderByValue).flatMap(([fieldName, fieldValue]) => {
             const entityField = entity.fields.find((field) => field.name === fieldName);
@@ -304,12 +306,12 @@ function resolveOrderBy(
                 };
             } else {
                 if (isReferenceField(entityField)) {
-                    const referencedEntity = getEntityByName(
-                        schema,
-                        entityField.sfdcReferencedEntityName,
-                    )!;
-
-                    return resolveOrderBy(info, referencedEntity, fieldValue, `${entityField.sfdcRelationshipName}.`);
+                    return resolveOrderBy(
+                        info,
+                        entityField.referencedEntity!,
+                        fieldValue,
+                        `${entityField.relationshipName}.`,
+                    );
                 } else {
                     // TODO: Handle polymorphic relationships.
                     return [];
@@ -322,9 +324,10 @@ function resolveOrderBy(
 function resolveSelection(
     info: GraphQLResolveInfo,
     entity: Entity,
+    sfdcSchema: SfdcSchema,
     selectionSet: SelectionSetNode,
 ): SOQLSelect[] {
-    const { schema, fragments } = info;
+    const { fragments } = info;
     const soqlSelects: SOQLSelect[] = [];
 
     for (const selection of selectionSet.selections) {
@@ -338,10 +341,7 @@ function resolveSelection(
                 const entityField = entity.fields.find(
                     (entity) => entity.name === selection.name.value,
                 );
-                assert(
-                    entityField,
-                    `Can't find field ${selection.name.value} on ${entity.name}`,
-                );
+                assert(entityField, `Can't find field ${selection.name.value} on ${entity.name}`);
 
                 if (isScalarField(entityField)) {
                     soqlSelects.push({
@@ -349,15 +349,15 @@ function resolveSelection(
                         name: entityField.name,
                     });
                 } else if (isReferenceField(entityField) && selection.selectionSet) {
-                    const referenceEntity = getEntityByName(
-                        schema,
-                        entityField.sfdcReferencedEntityName,
-                    )!;
-
                     soqlSelects.push({
                         type: SoqlFieldType.REFERENCE,
-                        name: entityField.sfdcRelationshipName,
-                        selects: resolveSelection(info, referenceEntity, selection.selectionSet),
+                        name: entityField.relationshipName,
+                        selects: resolveSelection(
+                            info,
+                            entityField.referencedEntity!,
+                            sfdcSchema,
+                            selection.selectionSet,
+                        ),
                     });
                 } else if (isPolymorphicReference(entityField) && selection.selectionSet) {
                     // TODO: Handle polymorphic relationships.
@@ -367,17 +367,14 @@ function resolveSelection(
 
             case Kind.INLINE_FRAGMENT: {
                 let fragmentEntity = entity;
-
                 if (selection.typeCondition) {
-                    const type = schema.getType(
-                        selection.typeCondition.name.value,
-                    ) as GraphQLObjectType;
-                    fragmentEntity = type.extensions.sfdc!;
+                    fragmentEntity = sfdcSchema.entities[selection.typeCondition.name.value];
                 }
 
                 const fragmentSelects = resolveSelection(
                     info,
                     fragmentEntity,
+                    sfdcSchema,
                     selection.selectionSet,
                 );
                 soqlSelects.push(...fragmentSelects);
@@ -386,13 +383,12 @@ function resolveSelection(
 
             case Kind.FRAGMENT_SPREAD: {
                 const fragment = fragments[selection.name.value];
-
-                const type = schema.getType(fragment.typeCondition.name.value) as GraphQLObjectType;
-                const fragmentEntity = type.extensions.sfdc!;
+                const fragmentEntity = sfdcSchema.entities[fragment.typeCondition.name.value];
 
                 const fragmentSelects = resolveSelection(
                     info,
                     fragmentEntity,
+                    sfdcSchema,
                     fragment.selectionSet,
                 );
                 soqlSelects.push(...fragmentSelects);
@@ -406,13 +402,4 @@ function resolveSelection(
 
 function isMetaField(fieldNode: FieldNode): boolean {
     return fieldNode.name.value.startsWith('__');
-}
-
-// TODO: This is really under performant, and should be abstracted away. All the entities should be
-// capable to reference each others.
-function getEntityByName(schema: GraphQLSchema, name: string): Entity | undefined {
-    return Object.values(schema.getTypeMap()).find(
-        (type): type is GraphQLObjectType =>
-            isObjectType(type) && type.extensions.sfdc?.name === name,
-    )?.extensions.sfdc;
 }

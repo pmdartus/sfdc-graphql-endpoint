@@ -2,12 +2,12 @@ import * as graphql from 'graphql';
 import { GraphQLSchema, Source, DocumentNode } from 'graphql';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
-import { createEntity } from '../entity.js';
 import { entitiesToSchema } from '../graphql.js';
 import { soqlResolvers, ResolverContext } from '../resolvers.js';
 
 import { LRU } from '../utils/lru.js';
 import { Api } from '../sfdc/api.js';
+import { createSfdcSchema } from '../sfdc/schema.js';
 
 import sfdcFastifyPlugin from './sfdc-plugin.js';
 
@@ -125,7 +125,7 @@ export function graphqlFastifyPlugin(opts: SfdcGraphQLOptions) {
             const sObjects = await Promise.all(entities.map((entity) => api.describeSObject(entity)));
 
             const schema = entitiesToSchema({
-                entities: sObjects.map(sObject => createEntity(sObject)),
+                sfdcSchema: createSfdcSchema({ sObjects }),
                 resolvers: soqlResolvers,
             });
     

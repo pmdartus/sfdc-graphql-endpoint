@@ -3,7 +3,11 @@ import {
     SObjectChildRelationship,
     SObjectField,
     SObjectFieldType,
-} from './sfdc/types/describe-sobject.js';
+} from './types/describe-sobject.js';
+
+export interface SfdcSchema {
+    entities: { [name: string]: Entity };
+}
 
 export interface Entity {
     name: string;
@@ -92,14 +96,16 @@ export type ScalarField =
     | BaseField<FieldType.MULTI_PICKLIST>
     | BaseField<FieldType.COMBOBOX>;
 
+type EntityReference = Entity | undefined;
+
 export interface ReferenceField extends BaseField<FieldType.REFERENCE> {
-    sfdcRelationshipName: string;
-    sfdcReferencedEntityName: string;
+    relationshipName: string;
+    referencedEntity: EntityReference;
 }
 
 export interface PolymorphicReferenceField extends BaseField<FieldType.POLYMORPHIC_REFERENCE> {
-    sfdcRelationshipName: string;
-    sfdcReferencedEntitiesNames: string[];
+    relationshipName: string;
+    referencedEntities: EntityReference[];
 }
 
 export type Field = ScalarField | ReferenceField | PolymorphicReferenceField;
@@ -131,15 +137,26 @@ const SOBJECT_FIELD_SCALAR_TYPE_MAPPING: {
     location: FieldType.LOCATION,
 };
 
-export function createEntity(sObject: DescribeSObjectResult): Entity {
+export function createSfdcSchema(config: { sObjects: DescribeSObjectResult[] }): SfdcSchema {
+    const schema: SfdcSchema = { entities: {} };
+
+    for (const sObject of config.sObjects) {
+        const entity = createEntity(schema, sObject);
+        schema.entities[entity.name] = entity;
+    }
+
+    return schema;
+}
+
+function createEntity(schema: SfdcSchema, sObject: DescribeSObjectResult): Entity {
     const { name, createable, updateable, deletable, queryable } = sObject;
 
     const fields = sObject.fields
-        .map(createField)
+        .map((field) => createField(schema, field))
         .filter((field): field is Field => field !== undefined);
 
     const childRelationships = sObject.childRelationships
-        .map(createChildRelationShip)
+        .map((relationship) => createChildRelationShip(schema, relationship))
         .filter((rel): rel is ChildRelationship => rel !== undefined);
 
     return {
@@ -155,7 +172,7 @@ export function createEntity(sObject: DescribeSObjectResult): Entity {
     };
 }
 
-function createField(sObjectField: SObjectField): Field | undefined {
+function createField(schema: SfdcSchema, sObjectField: SObjectField): Field | undefined {
     const {
         name,
         type,
@@ -188,27 +205,31 @@ function createField(sObjectField: SObjectField): Field | undefined {
 
         const baseReferenceField = {
             name,
-            sfdcRelationshipName: sObjectField.relationshipName,
+            relationshipName: sObjectField.relationshipName,
             config,
         };
 
         if (sObjectField.polymorphicForeignKey) {
             return {
                 type: FieldType.POLYMORPHIC_REFERENCE,
-                sfdcReferencedEntitiesNames: sObjectField.referenceTo,
                 ...baseReferenceField,
+                get referencedEntities() {
+                    return sObjectField.referenceTo.map(entityName => schema.entities[entityName])
+                },
             };
         } else {
             return {
                 type: FieldType.REFERENCE,
-                sfdcReferencedEntityName: sObjectField.referenceTo[0],
                 ...baseReferenceField,
+                get referencedEntity() {
+                    return schema.entities[sObjectField.referenceTo[0]]
+                },
             };
         }
     } else {
         // TODO: What should be done with compound fields? Compound fields contains duplicate
         // information, that will be present in other fields.
-        // For example: 
+        // For example:
         //  - name -> first name + last name
         //  - address -> address city + address street + ...
         return {
@@ -220,6 +241,7 @@ function createField(sObjectField: SObjectField): Field | undefined {
 }
 
 function createChildRelationShip(
+    schema: SfdcSchema,
     relationship: SObjectChildRelationship,
 ): ChildRelationship | undefined {
     if (relationship.relationshipName === null) {

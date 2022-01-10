@@ -460,7 +460,7 @@ input Product__cOrderBy {
   Gender__c: OrderByEnum
   Picture_URL__c: OrderByEnum
   Price__c: OrderByEnum
-  Product_Family__c: OrderByEnum
+  Product_Family__c: [Product_Family__cOrderBy]
   Suspension__c: OrderByEnum
 }
 
@@ -522,7 +522,7 @@ input Order_Item__cOrderBy {
   SystemModstamp: OrderByEnum
   LastViewedDate: OrderByEnum
   LastReferencedDate: OrderByEnum
-  Order__c: OrderByEnum
+  Order__c: [Order__cOrderBy]
   Product__c: [Product__cOrderBy]
 }
 

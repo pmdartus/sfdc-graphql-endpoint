@@ -7,6 +7,7 @@ import {
     GraphQLID,
     GraphQLInputFieldConfig,
     GraphQLInputObjectType,
+    GraphQLInputType,
     GraphQLInt,
     GraphQLInterfaceType,
     GraphQLList,
@@ -27,24 +28,14 @@ import {
     isScalarField,
     ReferenceField,
     ScalarField,
-} from './entity.js';
-
-declare module 'graphql' {
-    interface GraphQLObjectTypeExtensions {
-        sfdc?: Entity;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    interface GraphQLFieldExtensions<_TSource, _TContext> {
-        sfdc?: Field;
-    }
-}
+    SfdcSchema,
+} from './sfdc/schema.js';
 
 interface SchemaConfig<Context> {
-    entities: Entity[];
+    sfdcSchema: SfdcSchema;
     resolvers?: {
-        query?: (entity: Entity) => GraphQLFieldResolver<unknown, Context>;
-        queryMany?: (entity: Entity) => GraphQLFieldResolver<unknown, Context>;
+        query?: (entity: Entity, schema: SfdcSchema) => GraphQLFieldResolver<unknown, Context>;
+        queryMany?: (entity: Entity, schema: SfdcSchema) => GraphQLFieldResolver<unknown, Context>;
     };
 }
 
@@ -62,10 +53,10 @@ const ENTITY_INTERFACE = new GraphQLInterfaceType({
             type: GraphQLID,
         },
         Name: {
-            type: GraphQLString
-        }
-    }
-})
+            type: GraphQLString,
+        },
+    },
+});
 
 const SCALAR_TYPES_MAPPING: { [type in ScalarField['type']]: GraphQLScalarType } = {
     // Builtin GraphQL scalars
@@ -144,12 +135,12 @@ export function entitiesToSchema<Context>(config: SchemaConfig<Context>): GraphQ
         columnExprTypes: new Map(),
     };
 
-    for (const entity of config.entities) {
+    for (const [name, entity] of Object.entries(config.sfdcSchema.entities)) {
         const type = createGraphQLEntityType(state, entity);
-        state.types.set(entity.name, type);
+        state.types.set(name, type);
     }
 
-    const query = createQuery(state, config.entities);
+    const query = createQuery(state);
 
     return new GraphQLSchema({
         query,
@@ -168,13 +159,13 @@ function createGraphQLEntityType(state: State, entity: Entity): GraphQLObjectTyp
             );
         },
         interfaces: [ENTITY_INTERFACE],
-        extensions: {
-            sfdc: entity,
-        },
     });
 }
 
-function createGraphQLEntityField(state: State, field: Field): GraphQLFieldConfig<unknown, unknown> {
+function createGraphQLEntityField(
+    state: State,
+    field: Field,
+): GraphQLFieldConfig<unknown, unknown> {
     let type: GraphQLOutputType;
     let resolve: GraphQLFieldResolver<any, unknown> = (source) => {
         return source[field.name];
@@ -183,16 +174,15 @@ function createGraphQLEntityField(state: State, field: Field): GraphQLFieldConfi
     if (isScalarField(field)) {
         type = SCALAR_TYPES_MAPPING[field.type];
     } else if (isReferenceField(field)) {
-        // If the the referenced entity is part of the graph, make the field resolve to the
-        // associated GraphQL type. Otherwise make the field resolve object id.
-        if (state.types.has(field.sfdcReferencedEntityName)) {
-            type = state.types.get(field.sfdcReferencedEntityName)!;
-            resolve = (source) => {
-                return source[field.sfdcRelationshipName];
-            };
-        } else {
-            // TODO: Add support for lookup that aren't part of the graph.
+        const { referencedEntity } = field;
+
+        if (!referencedEntity) {
             type = GraphQLID;
+        } else {
+            type = state.types.get(referencedEntity.name)!;
+            resolve = (source) => {
+                return source[field.relationshipName];
+            };
         }
     } else {
         // TODO: Add support for polymorphic field lookups.
@@ -206,13 +196,13 @@ function createGraphQLEntityField(state: State, field: Field): GraphQLFieldConfi
     return {
         type,
         resolve,
-        extensions: {
-            sfdc: field,
-        },
     };
 }
 
-function createQuery(state: State, entities: Entity[]): GraphQLObjectType {
+function createQuery(state: State): GraphQLObjectType {
+    const { sfdcSchema } = state.config;
+    const entities = Object.values(sfdcSchema.entities);
+
     return new GraphQLObjectType({
         name: 'Query',
         fields: () => {
@@ -229,25 +219,29 @@ function createEntityQueries(
     entity: Entity,
 ): Record<string, GraphQLFieldConfig<unknown, unknown>> {
     const { name } = entity;
-    const { resolvers } = state.config;
+    const { resolvers, sfdcSchema } = state.config;
 
     const type = state.types.get(name)!;
 
     const orderByInputType = new GraphQLList(
         new GraphQLInputObjectType({
             name: `${name}OrderBy`,
-            fields: Object.fromEntries(
+            fields: () => Object.fromEntries(
                 entity.fields
                     .filter((field) => field.config.sortable)
-                    .map((field) => [
-                        field.name,
-                        {
-                            type: isReferenceField(field)
-                                ? state.orderByTypes.get(field.sfdcReferencedEntityName) ??
-                                ORDER_BY_ENUM_TYPE
-                                : ORDER_BY_ENUM_TYPE,
-                        },
-                    ]),
+                    .map((field) => {
+                        let type: GraphQLInputType = ORDER_BY_ENUM_TYPE;
+                        if (isReferenceField(field) && field.referencedEntity) {
+                            type = state.orderByTypes.get(field.referencedEntity.name)!;
+                        }
+
+                        return [
+                            field.name,
+                            {
+                                type,
+                            },
+                        ];
+                    }),
             ),
         }),
     );
@@ -269,15 +263,26 @@ function createEntityQueries(
                             (field): field is ScalarField | ReferenceField =>
                                 field.config.filterable && !isPolymorphicReference(field),
                         )
-                        .map((field) => [
-                            field.name,
-                            {
-                                type: isReferenceField(field)
-                                    ? state.columnExprTypes.get(field.sfdcReferencedEntityName) ??
-                                      ORDER_BY_ENUM_TYPE
-                                    : OPERATOR_INPUT_TYPES_MAPPING[field.type],
-                            },
-                        ]),
+                        .map((field) => {
+                            let type: GraphQLInputType;
+
+                            if (isScalarField(field)) {
+                                type = OPERATOR_INPUT_TYPES_MAPPING[field.type];
+                            } else if (isReferenceField(field)) {
+                                if (field.referencedEntity) {
+                                    type = state.columnExprTypes.get(field.referencedEntity.name)!;
+                                } else {
+                                    type = ORDER_BY_ENUM_TYPE;
+                                }
+                            }
+
+                            return [
+                                field.name,
+                                {
+                                    type: type!,
+                                },
+                            ];
+                        }),
                 ),
             };
         },
@@ -296,12 +301,12 @@ function createEntityQueries(
                 },
             },
             type: new GraphQLList(type),
-            resolve: resolvers?.queryMany?.(entity),
+            resolve: resolvers?.queryMany?.(entity, sfdcSchema),
         },
         [`${name}_by_id`]: {
             args: BY_ID_INPUT_ARGS,
             type: type,
-            resolve: resolvers?.query?.(entity),
+            resolve: resolvers?.query?.(entity, sfdcSchema),
         },
     };
 }
