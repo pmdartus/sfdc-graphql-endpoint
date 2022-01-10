@@ -4,12 +4,12 @@ exports[`eBikes entity get product list retrieve more products 1`] = `
 Object {
   "Product__c": Array [
     Object {
-      "name": "Rolling Mountain - Female",
-      "price__c": 2300,
+      "Name": "Rolling Mountain - Female",
+      "Price__c": 2300,
     },
     Object {
-      "name": "Rolling Mountain - Male",
-      "price__c": 2300,
+      "Name": "Rolling Mountain - Male",
+      "Price__c": 2300,
     },
   ],
 }
@@ -19,12 +19,12 @@ exports[`eBikes entity get product list retrieve more products 2`] = `
 Object {
   "Product__c": Array [
     Object {
-      "name": "Neomov - Suspension",
-      "price__c": 1850,
+      "Name": "Neomov - Suspension",
+      "Price__c": 1850,
     },
     Object {
-      "name": "Neomov - Female frame",
-      "price__c": 1450,
+      "Name": "Neomov - Female frame",
+      "Price__c": 1450,
     },
   ],
 }
@@ -34,54 +34,54 @@ exports[`eBikes entity get product list retrieve most expensive products 1`] = `
 Object {
   "Product__c": Array [
     Object {
-      "name": "Rolling Mountain - Female",
-      "price__c": 2300,
+      "Name": "Rolling Mountain - Female",
+      "Price__c": 2300,
     },
     Object {
-      "name": "Rolling Mountain - Male",
-      "price__c": 2300,
+      "Name": "Rolling Mountain - Male",
+      "Price__c": 2300,
     },
     Object {
-      "name": "Neomov - Suspension",
-      "price__c": 1850,
+      "Name": "Neomov - Suspension",
+      "Price__c": 1850,
     },
     Object {
-      "name": "Neomov - Male frame",
-      "price__c": 1450,
-    },
-  ],
-}
-`;
-
-exports[`eBikes entity get product list retrieve products by exact name 1`] = `
-Object {
-  "Product__c": Array [
-    Object {
-      "name": "Neomov - Basic",
-      "price__c": 1450,
+      "Name": "Neomov - Male frame",
+      "Price__c": 1450,
     },
   ],
 }
 `;
 
-exports[`eBikes entity get product list retrieve products by matching name 1`] = `
+exports[`eBikes entity get product list retrieve products by exact Name 1`] = `
 Object {
   "Product__c": Array [
     Object {
-      "name": "Neomov - Basic",
-      "price__c": 1450,
+      "Name": "Neomov - Basic",
+      "Price__c": 1450,
+    },
+  ],
+}
+`;
+
+exports[`eBikes entity get product list retrieve products by matching Name 1`] = `
+Object {
+  "Product__c": Array [
+    Object {
+      "Name": "Neomov - Basic",
+      "Price__c": 1450,
     },
     Object {
-      "name": "Neomov - Female frame",
-      "price__c": 1450,
+      "Name": "Neomov - Female frame",
+      "Price__c": 1450,
     },
     Object {
-      "name": "Neomov - Male frame",
-      "price__c": 1450,
+      "Name": "Neomov - Male frame",
+      "Price__c": 1450,
     },
     Object {
-      "name": "Neomov - Suspension",
-      "price__c": 1850,
+      "Name": "Neomov - Suspension",
+      "Price__c": 1850,
     },
   ],
 }
@@ -91,16 +91,16 @@ exports[`eBikes entity get product list retrieve products in price range 1`] = `
 Object {
   "Product__c": Array [
     Object {
-      "name": "Neomov - Basic",
-      "price__c": 1450,
+      "Name": "Neomov - Basic",
+      "Price__c": 1450,
     },
     Object {
-      "name": "Neomov - Female frame",
-      "price__c": 1450,
+      "Name": "Neomov - Female frame",
+      "Price__c": 1450,
     },
     Object {
-      "name": "Neomov - Male frame",
-      "price__c": 1450,
+      "Name": "Neomov - Male frame",
+      "Price__c": 1450,
     },
   ],
 }
@@ -110,24 +110,24 @@ exports[`eBikes entity get product list retrieve products male or female product
 Object {
   "Product__c": Array [
     Object {
-      "gender__c": "Female",
-      "name": "Neomov - Female frame",
-      "price__c": 1450,
+      "Gender__c": "Female",
+      "Name": "Neomov - Female frame",
+      "Price__c": 1450,
     },
     Object {
-      "gender__c": "Male",
-      "name": "Neomov - Male frame",
-      "price__c": 1450,
+      "Gender__c": "Male",
+      "Name": "Neomov - Male frame",
+      "Price__c": 1450,
     },
     Object {
-      "gender__c": "Female",
-      "name": "Rolling Mountain - Female",
-      "price__c": 2300,
+      "Gender__c": "Female",
+      "Name": "Rolling Mountain - Female",
+      "Price__c": 2300,
     },
     Object {
-      "gender__c": "Male",
-      "name": "Rolling Mountain - Male",
-      "price__c": 2300,
+      "Gender__c": "Male",
+      "Name": "Rolling Mountain - Male",
+      "Price__c": 2300,
     },
   ],
 }
@@ -137,44 +137,44 @@ exports[`eBikes entity get product list retrieve products order by gender and pr
 Object {
   "Product__c": Array [
     Object {
-      "gender__c": "Unisex",
-      "name": "Wisper foldable - Upgraded",
-      "price__c": 1230,
+      "Gender__c": "Unisex",
+      "Name": "Wisper foldable - Upgraded",
+      "Price__c": 1230,
     },
     Object {
-      "gender__c": "Unisex",
-      "name": "Wisper foldable",
-      "price__c": 1230,
+      "Gender__c": "Unisex",
+      "Name": "Wisper foldable",
+      "Price__c": 1230,
     },
     Object {
-      "gender__c": "Unisex",
-      "name": "Neomov - Basic",
-      "price__c": 1450,
+      "Gender__c": "Unisex",
+      "Name": "Neomov - Basic",
+      "Price__c": 1450,
     },
     Object {
-      "gender__c": "Unisex",
-      "name": "Neomov - Suspension",
-      "price__c": 1850,
+      "Gender__c": "Unisex",
+      "Name": "Neomov - Suspension",
+      "Price__c": 1850,
     },
     Object {
-      "gender__c": "Male",
-      "name": "Neomov - Male frame",
-      "price__c": 1450,
+      "Gender__c": "Male",
+      "Name": "Neomov - Male frame",
+      "Price__c": 1450,
     },
     Object {
-      "gender__c": "Male",
-      "name": "Rolling Mountain - Male",
-      "price__c": 2300,
+      "Gender__c": "Male",
+      "Name": "Rolling Mountain - Male",
+      "Price__c": 2300,
     },
     Object {
-      "gender__c": "Female",
-      "name": "Neomov - Female frame",
-      "price__c": 1450,
+      "Gender__c": "Female",
+      "Name": "Neomov - Female frame",
+      "Price__c": 1450,
     },
     Object {
-      "gender__c": "Female",
-      "name": "Rolling Mountain - Female",
-      "price__c": 2300,
+      "Gender__c": "Female",
+      "Name": "Rolling Mountain - Female",
+      "Price__c": 2300,
     },
   ],
 }
@@ -184,32 +184,32 @@ exports[`eBikes entity get product list retrieve the products with suspensions 1
 Object {
   "Product__c": Array [
     Object {
-      "name": "Neomov - Suspension",
-      "price__c": 1850,
-      "suspension__c": true,
+      "Name": "Neomov - Suspension",
+      "Price__c": 1850,
+      "Suspension__c": true,
     },
     Object {
-      "name": "Rolling Mountain - Female",
-      "price__c": 2300,
-      "suspension__c": true,
+      "Name": "Rolling Mountain - Female",
+      "Price__c": 2300,
+      "Suspension__c": true,
     },
     Object {
-      "name": "Rolling Mountain - Male",
-      "price__c": 2300,
-      "suspension__c": true,
+      "Name": "Rolling Mountain - Male",
+      "Price__c": 2300,
+      "Suspension__c": true,
     },
   ],
 }
 `;
 
-exports[`eBikes entity get product list retrieve the products with the "Rolling Mountain" family name 1`] = `
+exports[`eBikes entity get product list retrieve the products with the "Rolling Mountain" family Name 1`] = `
 Object {
   "Product__c": Array [
     Object {
-      "name": "Rolling Mountain - Female",
-      "price__c": 2300,
-      "product_Family__r": Object {
-        "name": "Rolling Mountain",
+      "Name": "Rolling Mountain - Female",
+      "Price__c": 2300,
+      "Product_Family__c": Object {
+        "Name": "Rolling Mountain",
       },
     },
   ],
@@ -218,24 +218,24 @@ Object {
 
 exports[`eBikes entity introspection introspect schema 1`] = `
 "type Product__c {
-  id: ID!
-  owner: ID!
-  isDeleted: Boolean!
-  name: String
-  createdDate: DateTime!
-  createdBy: ID!
-  lastModifiedDate: DateTime!
-  lastModifiedBy: ID!
-  systemModstamp: DateTime!
-  lastViewedDate: DateTime
-  lastReferencedDate: DateTime
-  autonomy__c: Float
-  description__c: TextArea
-  gender__c: Picklist
-  picture_URL__c: URL!
-  price__c: Currency
-  product_Family__r: Product_Family__c
-  suspension__c: Boolean!
+  Id: ID!
+  OwnerId: ID!
+  IsDeleted: Boolean!
+  Name: String
+  CreatedDate: DateTime!
+  CreatedById: ID!
+  LastModifiedDate: DateTime!
+  LastModifiedById: ID!
+  SystemModstamp: DateTime!
+  LastViewedDate: DateTime
+  LastReferencedDate: DateTime
+  Autonomy__c: Float
+  Description__c: TextArea
+  Gender__c: Picklist
+  Picture_URL__c: URL!
+  Price__c: Currency
+  Product_Family__c: Product_Family__c
+  Suspension__c: Boolean!
 }
 
 scalar DateTime
@@ -249,48 +249,48 @@ scalar URL
 scalar Currency
 
 type Product_Family__c {
-  id: ID!
-  owner: ID!
-  isDeleted: Boolean!
-  name: String
-  createdDate: DateTime!
-  createdBy: ID!
-  lastModifiedDate: DateTime!
-  lastModifiedBy: ID!
-  systemModstamp: DateTime!
-  lastViewedDate: DateTime
-  lastReferencedDate: DateTime
-  category__c: Picklist
-  description__c: TextArea
+  Id: ID!
+  OwnerId: ID!
+  IsDeleted: Boolean!
+  Name: String
+  CreatedDate: DateTime!
+  CreatedById: ID!
+  LastModifiedDate: DateTime!
+  LastModifiedById: ID!
+  SystemModstamp: DateTime!
+  LastViewedDate: DateTime
+  LastReferencedDate: DateTime
+  Category__c: Picklist
+  Description__c: TextArea
 }
 
 type Order_Item__c {
-  id: ID!
-  isDeleted: Boolean!
-  name: String!
-  createdDate: DateTime!
-  createdBy: ID!
-  lastModifiedDate: DateTime!
-  lastModifiedBy: ID!
-  systemModstamp: DateTime!
-  lastViewedDate: DateTime
-  lastReferencedDate: DateTime
-  order__r: Order__c!
-  product__r: Product__c!
+  Id: ID!
+  IsDeleted: Boolean!
+  Name: String!
+  CreatedDate: DateTime!
+  CreatedById: ID!
+  LastModifiedDate: DateTime!
+  LastModifiedById: ID!
+  SystemModstamp: DateTime!
+  LastViewedDate: DateTime
+  LastReferencedDate: DateTime
+  Order__c: Order__c!
+  Product__c: Product__c!
 }
 
 type Order__c {
-  id: ID!
-  owner: ID!
-  isDeleted: Boolean!
-  name: String!
-  createdDate: DateTime!
-  createdBy: ID!
-  lastModifiedDate: DateTime!
-  lastModifiedBy: ID!
-  systemModstamp: DateTime!
-  lastViewedDate: DateTime
-  lastReferencedDate: DateTime
+  Id: ID!
+  OwnerId: ID!
+  IsDeleted: Boolean!
+  Name: String!
+  CreatedDate: DateTime!
+  CreatedById: ID!
+  LastModifiedDate: DateTime!
+  LastModifiedById: ID!
+  SystemModstamp: DateTime!
+  LastViewedDate: DateTime
+  LastReferencedDate: DateTime
 }
 
 type Query {
@@ -307,22 +307,22 @@ type Query {
 input Product__cColumnExpr {
   _and: [Product__cColumnExpr]
   _or: [Product__cColumnExpr]
-  id: IDOperator
-  isDeleted: BooleanOperator
-  name: StringOperator
-  createdDate: DateTimeOperator
-  createdBy: OrderByEnum
-  lastModifiedDate: DateTimeOperator
-  lastModifiedBy: OrderByEnum
-  systemModstamp: DateTimeOperator
-  lastViewedDate: DateTimeOperator
-  lastReferencedDate: DateTimeOperator
-  autonomy__c: FloatOperator
-  gender__c: PicklistOperator
-  picture_URL__c: URLOperator
-  price__c: CurrencyOperator
-  product_Family__r: Product_Family__cColumnExpr
-  suspension__c: BooleanOperator
+  Id: IDOperator
+  IsDeleted: BooleanOperator
+  Name: StringOperator
+  CreatedDate: DateTimeOperator
+  CreatedById: OrderByEnum
+  LastModifiedDate: DateTimeOperator
+  LastModifiedById: OrderByEnum
+  SystemModstamp: DateTimeOperator
+  LastViewedDate: DateTimeOperator
+  LastReferencedDate: DateTimeOperator
+  Autonomy__c: FloatOperator
+  Gender__c: PicklistOperator
+  Picture_URL__c: URLOperator
+  Price__c: CurrencyOperator
+  Product_Family__c: Product_Family__cColumnExpr
+  Suspension__c: BooleanOperator
 }
 
 input IDOperator {
@@ -426,112 +426,112 @@ input CurrencyOperator {
 input Product_Family__cColumnExpr {
   _and: [Product_Family__cColumnExpr]
   _or: [Product_Family__cColumnExpr]
-  id: IDOperator
-  isDeleted: BooleanOperator
-  name: StringOperator
-  createdDate: DateTimeOperator
-  createdBy: OrderByEnum
-  lastModifiedDate: DateTimeOperator
-  lastModifiedBy: OrderByEnum
-  systemModstamp: DateTimeOperator
-  lastViewedDate: DateTimeOperator
-  lastReferencedDate: DateTimeOperator
-  category__c: PicklistOperator
+  Id: IDOperator
+  IsDeleted: BooleanOperator
+  Name: StringOperator
+  CreatedDate: DateTimeOperator
+  CreatedById: OrderByEnum
+  LastModifiedDate: DateTimeOperator
+  LastModifiedById: OrderByEnum
+  SystemModstamp: DateTimeOperator
+  LastViewedDate: DateTimeOperator
+  LastReferencedDate: DateTimeOperator
+  Category__c: PicklistOperator
 }
 
 input Product__cOrderBy {
-  id: OrderByEnum
-  owner: OrderByEnum
-  isDeleted: OrderByEnum
-  name: OrderByEnum
-  createdDate: OrderByEnum
-  createdBy: OrderByEnum
-  lastModifiedDate: OrderByEnum
-  lastModifiedBy: OrderByEnum
-  systemModstamp: OrderByEnum
-  lastViewedDate: OrderByEnum
-  lastReferencedDate: OrderByEnum
-  autonomy__c: OrderByEnum
-  gender__c: OrderByEnum
-  picture_URL__c: OrderByEnum
-  price__c: OrderByEnum
-  product_Family__r: OrderByEnum
-  suspension__c: OrderByEnum
+  Id: OrderByEnum
+  OwnerId: OrderByEnum
+  IsDeleted: OrderByEnum
+  Name: OrderByEnum
+  CreatedDate: OrderByEnum
+  CreatedById: OrderByEnum
+  LastModifiedDate: OrderByEnum
+  LastModifiedById: OrderByEnum
+  SystemModstamp: OrderByEnum
+  LastViewedDate: OrderByEnum
+  LastReferencedDate: OrderByEnum
+  Autonomy__c: OrderByEnum
+  Gender__c: OrderByEnum
+  Picture_URL__c: OrderByEnum
+  Price__c: OrderByEnum
+  Product_Family__c: OrderByEnum
+  Suspension__c: OrderByEnum
 }
 
 input Product_Family__cOrderBy {
-  id: OrderByEnum
-  owner: OrderByEnum
-  isDeleted: OrderByEnum
-  name: OrderByEnum
-  createdDate: OrderByEnum
-  createdBy: OrderByEnum
-  lastModifiedDate: OrderByEnum
-  lastModifiedBy: OrderByEnum
-  systemModstamp: OrderByEnum
-  lastViewedDate: OrderByEnum
-  lastReferencedDate: OrderByEnum
-  category__c: OrderByEnum
+  Id: OrderByEnum
+  OwnerId: OrderByEnum
+  IsDeleted: OrderByEnum
+  Name: OrderByEnum
+  CreatedDate: OrderByEnum
+  CreatedById: OrderByEnum
+  LastModifiedDate: OrderByEnum
+  LastModifiedById: OrderByEnum
+  SystemModstamp: OrderByEnum
+  LastViewedDate: OrderByEnum
+  LastReferencedDate: OrderByEnum
+  Category__c: OrderByEnum
 }
 
 input Order_Item__cColumnExpr {
   _and: [Order_Item__cColumnExpr]
   _or: [Order_Item__cColumnExpr]
-  id: IDOperator
-  isDeleted: BooleanOperator
-  name: StringOperator
-  createdDate: DateTimeOperator
-  createdBy: OrderByEnum
-  lastModifiedDate: DateTimeOperator
-  lastModifiedBy: OrderByEnum
-  systemModstamp: DateTimeOperator
-  lastViewedDate: DateTimeOperator
-  lastReferencedDate: DateTimeOperator
-  order__r: Order__cColumnExpr
-  product__r: Product__cColumnExpr
+  Id: IDOperator
+  IsDeleted: BooleanOperator
+  Name: StringOperator
+  CreatedDate: DateTimeOperator
+  CreatedById: OrderByEnum
+  LastModifiedDate: DateTimeOperator
+  LastModifiedById: OrderByEnum
+  SystemModstamp: DateTimeOperator
+  LastViewedDate: DateTimeOperator
+  LastReferencedDate: DateTimeOperator
+  Order__c: Order__cColumnExpr
+  Product__c: Product__cColumnExpr
 }
 
 input Order__cColumnExpr {
   _and: [Order__cColumnExpr]
   _or: [Order__cColumnExpr]
-  id: IDOperator
-  isDeleted: BooleanOperator
-  name: StringOperator
-  createdDate: DateTimeOperator
-  createdBy: OrderByEnum
-  lastModifiedDate: DateTimeOperator
-  lastModifiedBy: OrderByEnum
-  systemModstamp: DateTimeOperator
-  lastViewedDate: DateTimeOperator
-  lastReferencedDate: DateTimeOperator
+  Id: IDOperator
+  IsDeleted: BooleanOperator
+  Name: StringOperator
+  CreatedDate: DateTimeOperator
+  CreatedById: OrderByEnum
+  LastModifiedDate: DateTimeOperator
+  LastModifiedById: OrderByEnum
+  SystemModstamp: DateTimeOperator
+  LastViewedDate: DateTimeOperator
+  LastReferencedDate: DateTimeOperator
 }
 
 input Order_Item__cOrderBy {
-  id: OrderByEnum
-  isDeleted: OrderByEnum
-  name: OrderByEnum
-  createdDate: OrderByEnum
-  createdBy: OrderByEnum
-  lastModifiedDate: OrderByEnum
-  lastModifiedBy: OrderByEnum
-  systemModstamp: OrderByEnum
-  lastViewedDate: OrderByEnum
-  lastReferencedDate: OrderByEnum
-  order__r: OrderByEnum
-  product__r: [Product__cOrderBy]
+  Id: OrderByEnum
+  IsDeleted: OrderByEnum
+  Name: OrderByEnum
+  CreatedDate: OrderByEnum
+  CreatedById: OrderByEnum
+  LastModifiedDate: OrderByEnum
+  LastModifiedById: OrderByEnum
+  SystemModstamp: OrderByEnum
+  LastViewedDate: OrderByEnum
+  LastReferencedDate: OrderByEnum
+  Order__c: OrderByEnum
+  Product__c: [Product__cOrderBy]
 }
 
 input Order__cOrderBy {
-  id: OrderByEnum
-  owner: OrderByEnum
-  isDeleted: OrderByEnum
-  name: OrderByEnum
-  createdDate: OrderByEnum
-  createdBy: OrderByEnum
-  lastModifiedDate: OrderByEnum
-  lastModifiedBy: OrderByEnum
-  systemModstamp: OrderByEnum
-  lastViewedDate: OrderByEnum
-  lastReferencedDate: OrderByEnum
+  Id: OrderByEnum
+  OwnerId: OrderByEnum
+  IsDeleted: OrderByEnum
+  Name: OrderByEnum
+  CreatedDate: OrderByEnum
+  CreatedById: OrderByEnum
+  LastModifiedDate: OrderByEnum
+  LastModifiedById: OrderByEnum
+  SystemModstamp: OrderByEnum
+  LastViewedDate: OrderByEnum
+  LastReferencedDate: OrderByEnum
 }"
 `;

@@ -31,9 +31,9 @@ describe('eBikes entity', () => {
                 app,
                 query: gql`
                     {
-                        Product__c(order_by: { price__c: DESC }, limit: 4) {
-                            name
-                            price__c
+                        Product__c(order_by: { Price__c: DESC }, limit: 4) {
+                            Name
+                            Price__c
                         }
                     }
                 `,
@@ -46,10 +46,10 @@ describe('eBikes entity', () => {
                 app,
                 query: gql`
                     {
-                        Product__c(order_by: { gender__c: ASC, price__c: ASC }, limit: 10) {
-                            name
-                            price__c
-                            gender__c
+                        Product__c(order_by: { Gender__c: ASC, Price__c: ASC }, limit: 10) {
+                            Name
+                            Price__c
+                            Gender__c
                         }
                     }
                 `,
@@ -60,9 +60,9 @@ describe('eBikes entity', () => {
         test('retrieve more products', async () => {
             const query = gql`
                 query getProducts($offset: Int = 0) {
-                    Product__c(order_by: { price__c: DESC }, limit: 2, offset: $offset) {
-                        name
-                        price__c
+                    Product__c(order_by: { Price__c: DESC }, limit: 2, offset: $offset) {
+                        Name
+                        Price__c
                     }
                 }
             `;
@@ -92,13 +92,13 @@ describe('eBikes entity', () => {
                 query: gql`
                     {
                         Product__c(
-                            where: { suspension__c: { _eq: true } }
-                            order_by: { name: ASC }
+                            where: { Suspension__c: { _eq: true } }
+                            order_by: { Name: ASC }
                             limit: 10
                         ) {
-                            name
-                            price__c
-                            suspension__c
+                            Name
+                            Price__c
+                            Suspension__c
                         }
                     }
                 `,
@@ -112,12 +112,12 @@ describe('eBikes entity', () => {
                 query: gql`
                     {
                         Product__c(
-                            where: { price__c: { _gt: 1300, _lt: 1500 } }
-                            order_by: { name: ASC }
+                            where: { Price__c: { _gt: 1300, _lt: 1500 } }
+                            order_by: { Name: ASC }
                             limit: 10
                         ) {
-                            name
-                            price__c
+                            Name
+                            Price__c
                         }
                     }
                 `,
@@ -125,18 +125,18 @@ describe('eBikes entity', () => {
             expect(data).toMatchSnapshot();
         });
 
-        test('retrieve products by exact name', async () => {
+        test('retrieve products by exact Name', async () => {
             const { data } = await executeQuery({
                 app,
                 query: gql`
                     {
                         Product__c(
-                            where: { name: { _eq: "Neomov - Basic" } }
-                            order_by: { name: ASC }
+                            where: { Name: { _eq: "Neomov - Basic" } }
+                            order_by: { Name: ASC }
                             limit: 10
                         ) {
-                            name
-                            price__c
+                            Name
+                            Price__c
                         }
                     }
                 `,
@@ -144,18 +144,18 @@ describe('eBikes entity', () => {
             expect(data).toMatchSnapshot();
         });
 
-        test('retrieve products by matching name', async () => {
+        test('retrieve products by matching Name', async () => {
             const { data } = await executeQuery({
                 app,
                 query: gql`
                     {
                         Product__c(
-                            where: { name: { _like: "Neomov%" } }
-                            order_by: { name: ASC }
+                            where: { Name: { _like: "Neomov%" } }
+                            order_by: { Name: ASC }
                             limit: 10
                         ) {
-                            name
-                            price__c
+                            Name
+                            Price__c
                         }
                     }
                 `,
@@ -169,13 +169,13 @@ describe('eBikes entity', () => {
                 query: gql`
                     {
                         Product__c(
-                            where: { gender__c: { _in: ["Male", "Female"] } }
-                            order_by: { name: ASC }
+                            where: { Gender__c: { _in: ["Male", "Female"] } }
+                            order_by: { Name: ASC }
                             limit: 10
                         ) {
-                            name
-                            price__c
-                            gender__c
+                            Name
+                            Price__c
+                            Gender__c
                         }
                     }
                 `,
@@ -183,20 +183,20 @@ describe('eBikes entity', () => {
             expect(data).toMatchSnapshot();
         });
 
-        test('retrieve the products with the "Rolling Mountain" family name', async () => {
+        test('retrieve the products with the "Rolling Mountain" family Name', async () => {
             const { data } = await executeQuery({
                 app,
                 query: gql`
                     {
                         Product__c(
-                            where: { product_Family__r: { name: { _eq: "Rolling Mountain" } } }
-                            order_by: { name: ASC }
+                            where: { Product_Family__c: { Name: { _eq: "Rolling Mountain" } } }
+                            order_by: { Name: ASC }
                             limit: 10
                         ) {
-                            name
-                            price__c
-                            product_Family__r {
-                                name
+                            Name
+                            Price__c
+                            Product_Family__c {
+                                Name
                             }
                         }
                     }
@@ -215,8 +215,8 @@ describe('eBikes entity', () => {
                 query: gql`
                     {
                         Product__c(limit: 1) {
-                            id
-                            name
+                            Id
+                            Name
                         }
                     }
                 `,
@@ -228,13 +228,13 @@ describe('eBikes entity', () => {
                 query: gql`
                     query getProductById($id: ID!) {
                         Product__c_by_id(id: $id) {
-                            id
-                            name
+                            Id
+                            Name
                         }
                     }
                 `,
                 variables: {
-                    id: productList[0].id,
+                    id: productList[0].Id,
                 },
             });
 

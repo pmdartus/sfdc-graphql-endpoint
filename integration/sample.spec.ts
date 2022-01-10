@@ -30,8 +30,8 @@ describe('Sample', () => {
             query: gql`
                 {
                     Sample__c(limit: 100) {
-                        id
-                        name
+                        Id
+                        Name
                     }
                 }
             `,
@@ -43,8 +43,8 @@ describe('Sample', () => {
 
         for (const record of data.Sample__c) {
             expect(record).toMatchObject({
-                id: expect.any(String),
-                name: expect.any(String),
+                Id: expect.any(String),
+                Name: expect.any(String),
             });
         }
     });
@@ -55,7 +55,7 @@ describe('Sample', () => {
             query: gql`
                 {
                     Sample__c(limit: 2) {
-                        name
+                        Name
                     }
                 }
             `,
@@ -69,14 +69,14 @@ describe('Sample', () => {
             app,
             query: gql`
                 {
-                    Sample__c(limit: 10, order_by: { name: ASC }) {
-                        name
+                    Sample__c(limit: 10, order_by: { Name: ASC }) {
+                        Name
                     }
                 }
             `,
         });
 
-        const names: string[] = data.Sample__c.map((record: any) => record.name);
+        const names: string[] = data.Sample__c.map((record: any) => record.Name);
         expect(names).toEqual([...names].sort());
     });
 
@@ -85,58 +85,57 @@ describe('Sample', () => {
             app,
             query: gql`
                 {
-                    Sample__c(limit: 10, order_by: { name: DESC }) {
-                        name
+                    Sample__c(limit: 10, order_by: { Name: DESC }) {
+                        Name
                     }
                 }
             `,
         });
 
-        const names: string[] = data.Sample__c.map((record: any) => record.name);
+        const names: string[] = data.Sample__c.map((record: any) => record.Name);
         expect(names).toEqual([...names].sort((a, b) => b.localeCompare(a)));
     });
 
-    // TODO: Fix me, something is wrong with the offset.
-    test.skip('retrieve next record using offset', async () => {
+    test('retrieve next record using offset', async () => {
         const fetchAllRes = await executeQuery({
             app,
             query: gql`
                 {
-                    Sample__c(limit: 4) {
-                        id
-                        name
+                    Sample__c(limit: 2, order_by: { Name: DESC }) {
+                        Id
+                        Name
                     }
                 }
             `,
         });
         const [firstRecordId, nextRecordId] = fetchAllRes.data.Sample__c.map(
-            (record: any) => record.id,
+            (record: any) => record.Id,
         );
 
         const fetchFirstRes = await executeQuery({
             app,
             query: gql`
                 {
-                    Sample__c(limit: 1, offset: 0) {
-                        id
-                        name
+                    Sample__c(limit: 1, offset: 0, order_by: { Name: DESC }) {
+                        Id
+                        Name
                     }
                 }
             `,
         });
-        expect(fetchFirstRes.data.Sample__c[0].id).toBe(firstRecordId);
+        expect(fetchFirstRes.data.Sample__c[0].Id).toBe(firstRecordId);
 
         const fetchNextRes = await executeQuery({
             app,
             query: gql`
                 {
-                    Sample__c(limit: 1, offset: 0) {
-                        id
-                        name
+                    Sample__c(limit: 1, offset: 1, order_by: { Name: DESC }) {
+                        Id
+                        Name
                     }
                 }
             `,
         });
-        expect(fetchNextRes.data.Sample__c[0].id).toBe(nextRecordId);
+        expect(fetchNextRes.data.Sample__c[0].Id).toBe(nextRecordId);
     });
 });

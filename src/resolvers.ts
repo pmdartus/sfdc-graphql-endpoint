@@ -101,7 +101,7 @@ export const soqlResolvers = {
 
             const queryString = queryToString({
                 selects,
-                table: entity.sfdcName,
+                table: entity.name,
                 where: {
                     type: SOQLConditionExprType.FIELD_EXPR,
                     field: 'Id',
@@ -129,7 +129,7 @@ export const soqlResolvers = {
 
             const query = queryToString({
                 selects,
-                table: entity.sfdcName,
+                table: entity.name,
                 ...soqlConfig,
             });
 
@@ -237,8 +237,8 @@ function resolveWhereExpr(
         const exprs: SOQLConditionExpr[] = [];
 
         for (const [fieldName, fieldValue] of Object.entries(whereValue)) {
-            const entityField = entity.fields.find((field) => field.gqlName === fieldName);
-            assert(entityField, `Can't find field ${fieldName} on ${entity.gqlName}`);
+            const entityField = entity.fields.find((field) => field.name === fieldName);
+            assert(entityField, `Can't find field ${fieldName} on ${entity.name}`);
 
             if (isScalarField(entityField)) {
                 const soqlFieldExprs = Object.entries(fieldValue).map(
@@ -250,7 +250,7 @@ function resolveWhereExpr(
 
                         return {
                             type: SOQLConditionExprType.FIELD_EXPR,
-                            field: columnPrefix + entityField.sfdcName,
+                            field: columnPrefix + entityField.name,
                             operator,
                             value,
                         };
@@ -294,12 +294,12 @@ function resolveOrderBy(
 
     return orderByValues.flatMap((orderByValue) =>
         Object.entries(orderByValue).flatMap(([fieldName, fieldValue]) => {
-            const entityField = entity.fields.find((field) => field.gqlName === fieldName);
-            assert(entityField, `Can't find field ${fieldName} on ${entity.gqlName}`);
+            const entityField = entity.fields.find((field) => field.name === fieldName);
+            assert(entityField, `Can't find field ${fieldName} on ${entity.name}`);
 
             if (typeof fieldValue === 'string') {
                 return {
-                    field: columnPrefix + entityField.sfdcName,
+                    field: columnPrefix + fieldName,
                     order: GRAPHQL_SORTING_ORDER_SOQL_MAPPING[fieldValue],
                 };
             } else {
@@ -336,17 +336,17 @@ function resolveSelection(
                 }
 
                 const entityField = entity.fields.find(
-                    (entity) => entity.gqlName === selection.name.value,
+                    (entity) => entity.name === selection.name.value,
                 );
                 assert(
                     entityField,
-                    `Can't find field ${selection.name.value} on ${entity.gqlName}`,
+                    `Can't find field ${selection.name.value} on ${entity.name}`,
                 );
 
                 if (isScalarField(entityField)) {
                     soqlSelects.push({
                         type: SoqlFieldType.FIELD,
-                        name: entityField.sfdcName,
+                        name: entityField.name,
                     });
                 } else if (isReferenceField(entityField) && selection.selectionSet) {
                     const referenceEntity = getEntityByName(
@@ -410,9 +410,9 @@ function isMetaField(fieldNode: FieldNode): boolean {
 
 // TODO: This is really under performant, and should be abstracted away. All the entities should be
 // capable to reference each others.
-function getEntityByName(schema: GraphQLSchema, sfdcName: string): Entity | undefined {
+function getEntityByName(schema: GraphQLSchema, name: string): Entity | undefined {
     return Object.values(schema.getTypeMap()).find(
         (type): type is GraphQLObjectType =>
-            isObjectType(type) && type.extensions.sfdc?.sfdcName === sfdcName,
+            isObjectType(type) && type.extensions.sfdc?.name === name,
     )?.extensions.sfdc;
 }

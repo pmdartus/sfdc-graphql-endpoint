@@ -133,7 +133,7 @@ export function entitiesToSchema<Context>(config: SchemaConfig<Context>): GraphQ
 
     for (const entity of config.entities) {
         const type = createGraphQLEntityType(state, entity);
-        state.types.set(entity.sfdcName, type);
+        state.types.set(entity.name, type);
     }
 
     const query = createQuery(state, config.entities);
@@ -145,13 +145,13 @@ export function entitiesToSchema<Context>(config: SchemaConfig<Context>): GraphQ
 }
 
 function createGraphQLEntityType(state: State, entity: Entity): GraphQLObjectType {
-    const { gqlName, fields } = entity;
+    const { name, fields } = entity;
 
     return new GraphQLObjectType({
-        name: gqlName,
+        name,
         fields: () => {
             return Object.fromEntries(
-                fields.map((field) => [field.gqlName, createGraphQLEntityField(state, field)]),
+                fields.map((field) => [field.name, createGraphQLEntityField(state, field)]),
             );
         },
         extensions: {
@@ -163,7 +163,7 @@ function createGraphQLEntityType(state: State, entity: Entity): GraphQLObjectTyp
 function createGraphQLEntityField(state: State, field: Field): GraphQLFieldConfig<unknown, unknown> {
     let type: GraphQLOutputType;
     let resolve: GraphQLFieldResolver<any, unknown> = (source) => {
-        return source[field.sfdcName];
+        return source[field.name];
     };
 
     if (isScalarField(field)) {
@@ -214,19 +214,19 @@ function createEntityQueries(
     state: State,
     entity: Entity,
 ): Record<string, GraphQLFieldConfig<unknown, unknown>> {
-    const { gqlName, sfdcName } = entity;
+    const { name } = entity;
     const { resolvers } = state.config;
 
-    const type = state.types.get(sfdcName)!;
+    const type = state.types.get(name)!;
 
     const orderByInputType = new GraphQLList(
         new GraphQLInputObjectType({
-            name: `${sfdcName}OrderBy`,
+            name: `${name}OrderBy`,
             fields: Object.fromEntries(
                 entity.fields
                     .filter((field) => field.config.sortable)
                     .map((field) => [
-                        field.gqlName,
+                        field.name,
                         {
                             type: isReferenceField(field)
                                 ? state.orderByTypes.get(field.sfdcReferencedEntityName) ??
@@ -237,10 +237,10 @@ function createEntityQueries(
             ),
         }),
     );
-    state.orderByTypes.set(sfdcName, orderByInputType);
+    state.orderByTypes.set(name, orderByInputType);
 
     const columnExprInputType: GraphQLInputObjectType = new GraphQLInputObjectType({
-        name: `${sfdcName}ColumnExpr`,
+        name: `${name}ColumnExpr`,
         fields: () => {
             return {
                 _and: {
@@ -256,7 +256,7 @@ function createEntityQueries(
                                 field.config.filterable && !isPolymorphicReference(field),
                         )
                         .map((field) => [
-                            field.gqlName,
+                            field.name,
                             {
                                 type: isReferenceField(field)
                                     ? state.columnExprTypes.get(field.sfdcReferencedEntityName) ??
@@ -268,10 +268,10 @@ function createEntityQueries(
             };
         },
     });
-    state.columnExprTypes.set(sfdcName, columnExprInputType);
+    state.columnExprTypes.set(name, columnExprInputType);
 
     return {
-        [gqlName]: {
+        [name]: {
             args: {
                 ...PAGINATION_INPUT_ARGS,
                 where: {
@@ -284,7 +284,7 @@ function createEntityQueries(
             type: new GraphQLList(type),
             resolve: resolvers?.queryMany?.(entity),
         },
-        [`${gqlName}_by_id`]: {
+        [`${name}_by_id`]: {
             args: BY_ID_INPUT_ARGS,
             type: type,
             resolve: resolvers?.query?.(entity),

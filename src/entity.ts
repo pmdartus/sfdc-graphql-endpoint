@@ -1,5 +1,3 @@
-import { camelCase } from './utils/string.js';
-
 import {
     DescribeSObjectResult,
     SObjectChildRelationship,
@@ -8,16 +6,14 @@ import {
 } from './sfdc/types/describe-sobject.js';
 
 export interface Entity {
-    sfdcName: string;
-    gqlName: string;
+    name: string;
     config: EntityConfig;
     fields: Field[];
     childRelationships: ChildRelationship[];
 }
 
 export interface ChildRelationship {
-    sfdcName: string;
-    gqlName: string;
+    name: string;
     entity: string;
 }
 
@@ -30,8 +26,7 @@ export interface EntityConfig {
 
 interface BaseField<T extends FieldType> {
     type: T;
-    sfdcName: string;
-    gqlName: string;
+    name: string;
     config: FieldConfig;
 }
 
@@ -136,9 +131,33 @@ const SOBJECT_FIELD_SCALAR_TYPE_MAPPING: {
     location: FieldType.LOCATION,
 };
 
+export function createEntity(sObject: DescribeSObjectResult): Entity {
+    const { name, createable, updateable, deletable, queryable } = sObject;
+
+    const fields = sObject.fields
+        .map(createField)
+        .filter((field): field is Field => field !== undefined);
+
+    const childRelationships = sObject.childRelationships
+        .map(createChildRelationShip)
+        .filter((rel): rel is ChildRelationship => rel !== undefined);
+
+    return {
+        name,
+        config: {
+            createable,
+            updateable,
+            deletable,
+            queryable,
+        },
+        fields,
+        childRelationships,
+    };
+}
+
 function createField(sObjectField: SObjectField): Field | undefined {
     const {
-        name: sfdcName,
+        name,
         type,
         nillable,
         createable,
@@ -168,8 +187,7 @@ function createField(sObjectField: SObjectField): Field | undefined {
         }
 
         const baseReferenceField = {
-            sfdcName,
-            gqlName: camelCase(sObjectField.relationshipName),
+            name,
             sfdcRelationshipName: sObjectField.relationshipName,
             config,
         };
@@ -195,8 +213,7 @@ function createField(sObjectField: SObjectField): Field | undefined {
         //  - address -> address city + address street + ...
         return {
             type: SOBJECT_FIELD_SCALAR_TYPE_MAPPING[type],
-            sfdcName,
-            gqlName: camelCase(sObjectField.name),
+            name,
             config,
         };
     }
@@ -210,34 +227,8 @@ function createChildRelationShip(
     }
 
     return {
-        sfdcName: relationship.relationshipName,
-        gqlName: camelCase(relationship.relationshipName),
+        name: relationship.relationshipName,
         entity: relationship.childSObject,
-    };
-}
-
-export function createEntity(sObject: DescribeSObjectResult): Entity {
-    const { name, createable, updateable, deletable, queryable } = sObject;
-
-    const fields = sObject.fields
-        .map(createField)
-        .filter((field): field is Field => field !== undefined);
-
-    const childRelationships = sObject.childRelationships
-        .map(createChildRelationShip)
-        .filter((rel): rel is ChildRelationship => rel !== undefined);
-
-    return {
-        sfdcName: name,
-        gqlName: name,
-        config: {
-            createable,
-            updateable,
-            deletable,
-            queryable,
-        },
-        fields,
-        childRelationships,
     };
 }
 
