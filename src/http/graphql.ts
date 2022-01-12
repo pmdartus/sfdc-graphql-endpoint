@@ -2,12 +2,13 @@ import * as graphql from 'graphql';
 import { GraphQLSchema, Source, DocumentNode } from 'graphql';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
-import { entitiesToSchema } from '../graphql.js';
-import { soqlResolvers, ResolverContext } from '../resolvers.js';
+import { entitiesToSchema } from '../graphql/schema.js';
+import { resolvers, ResolverContext } from '../graphql/resolvers.js';
 
-import { LRU } from '../utils/lru.js';
 import { Api } from '../sfdc/api.js';
 import { createSfdcSchema } from '../sfdc/schema.js';
+
+import { LRU } from '../utils/lru.js';
 
 import sfdcFastifyPlugin from './sfdc-plugin.js';
 
@@ -126,7 +127,7 @@ export function graphqlFastifyPlugin(opts: SfdcGraphQLOptions) {
 
             const schema = entitiesToSchema({
                 sfdcSchema: createSfdcSchema({ sObjects }),
-                resolvers: soqlResolvers,
+                resolvers,
             });
     
             graphql.assertValidSchema(schema);

@@ -33,8 +33,12 @@ exports[`Sample introspect schema 1`] = `
 }
 
 interface Entity {
-  Id: ID
+  Id: ID!
   Name: String
+  CreatedDate: DateTime!
+  LastModifiedDate: DateTime!
+  SystemModstamp: DateTime!
+  LastViewedDate: DateTime
 }
 
 scalar DateTime
@@ -62,13 +66,13 @@ scalar Time
 scalar URL
 
 type Query {
-  Sample__c(limit: Int!, offset: Int, where: Sample__cColumnExpr, order_by: [Sample__cOrderBy]): [Sample__c]
+  Sample__c(limit: Int!, offset: Int, where: Sample__cWhere, order_by: [Sample__cOrderBy]): [Sample__c]
   Sample__c_by_id(id: ID): Sample__c
 }
 
-input Sample__cColumnExpr {
-  _and: [Sample__cColumnExpr]
-  _or: [Sample__cColumnExpr]
+input Sample__cWhere {
+  _and: [Sample__cWhere]
+  _or: [Sample__cWhere]
   Id: IDOperator
   IsDeleted: BooleanOperator
   Name: StringOperator

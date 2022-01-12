@@ -1,5 +1,34 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`eBikes entity get orders retrieve products associated with order items 1`] = `
+Object {
+  "Order__c": Array [
+    Object {
+      "Order_Items__r": Array [
+        Object {
+          "Product__c": Object {
+            "Name": "Rolling Mountain - Male",
+            "Price__c": 2300,
+          },
+        },
+        Object {
+          "Product__c": Object {
+            "Name": "Neomov - Basic",
+            "Price__c": 1450,
+          },
+        },
+        Object {
+          "Product__c": Object {
+            "Name": "Wisper foldable - Upgraded",
+            "Price__c": 1230,
+          },
+        },
+      ],
+    },
+  ],
+}
+`;
+
 exports[`eBikes entity get product list retrieve more products 1`] = `
 Object {
   "Product__c": Array [
@@ -236,11 +265,16 @@ exports[`eBikes entity introspection introspect schema 1`] = `
   Price__c: Currency
   Product_Family__c: Product_Family__c
   Suspension__c: Boolean!
+  Order_Items__r(limit: Int!, offset: Int, where: Order_Item__cWhere, order_by: [Order_Item__cOrderBy]): [Order_Item__c]
 }
 
 interface Entity {
-  Id: ID
+  Id: ID!
   Name: String
+  CreatedDate: DateTime!
+  LastModifiedDate: DateTime!
+  SystemModstamp: DateTime!
+  LastViewedDate: DateTime
 }
 
 scalar DateTime
@@ -253,65 +287,9 @@ scalar URL
 
 scalar Currency
 
-type Product_Family__c implements Entity {
-  Id: ID!
-  OwnerId: ID!
-  IsDeleted: Boolean!
-  Name: String
-  CreatedDate: DateTime!
-  CreatedById: ID!
-  LastModifiedDate: DateTime!
-  LastModifiedById: ID!
-  SystemModstamp: DateTime!
-  LastViewedDate: DateTime
-  LastReferencedDate: DateTime
-  Category__c: Picklist
-  Description__c: TextArea
-}
-
-type Order_Item__c implements Entity {
-  Id: ID!
-  IsDeleted: Boolean!
-  Name: String!
-  CreatedDate: DateTime!
-  CreatedById: ID!
-  LastModifiedDate: DateTime!
-  LastModifiedById: ID!
-  SystemModstamp: DateTime!
-  LastViewedDate: DateTime
-  LastReferencedDate: DateTime
-  Order__c: Order__c!
-  Product__c: Product__c!
-}
-
-type Order__c implements Entity {
-  Id: ID!
-  OwnerId: ID!
-  IsDeleted: Boolean!
-  Name: String!
-  CreatedDate: DateTime!
-  CreatedById: ID!
-  LastModifiedDate: DateTime!
-  LastModifiedById: ID!
-  SystemModstamp: DateTime!
-  LastViewedDate: DateTime
-  LastReferencedDate: DateTime
-}
-
-type Query {
-  Product__c(limit: Int!, offset: Int, where: Product__cColumnExpr, order_by: [Product__cOrderBy]): [Product__c]
-  Product__c_by_id(id: ID): Product__c
-  Product_Family__c(limit: Int!, offset: Int, where: Product_Family__cColumnExpr, order_by: [Product_Family__cOrderBy]): [Product_Family__c]
-  Product_Family__c_by_id(id: ID): Product_Family__c
-  Order_Item__c(limit: Int!, offset: Int, where: Order_Item__cColumnExpr, order_by: [Order_Item__cOrderBy]): [Order_Item__c]
-  Order_Item__c_by_id(id: ID): Order_Item__c
-  Order__c(limit: Int!, offset: Int, where: Order__cColumnExpr, order_by: [Order__cOrderBy]): [Order__c]
-  Order__c_by_id(id: ID): Order__c
-}
-
-input Product__cColumnExpr {
-  _and: [Product__cColumnExpr]
-  _or: [Product__cColumnExpr]
+input Order_Item__cWhere {
+  _and: [Order_Item__cWhere]
+  _or: [Order_Item__cWhere]
   Id: IDOperator
   IsDeleted: BooleanOperator
   Name: StringOperator
@@ -322,12 +300,8 @@ input Product__cColumnExpr {
   SystemModstamp: DateTimeOperator
   LastViewedDate: DateTimeOperator
   LastReferencedDate: DateTimeOperator
-  Autonomy__c: FloatOperator
-  Gender__c: PicklistOperator
-  Picture_URL__c: URLOperator
-  Price__c: CurrencyOperator
-  Product_Family__c: Product_Family__cColumnExpr
-  Suspension__c: BooleanOperator
+  Order__c: Order__cWhere
+  Product__c: Product__cWhere
 }
 
 input IDOperator {
@@ -384,6 +358,42 @@ enum OrderByEnum {
   DESC_NULLS_LAST
 }
 
+input Order__cWhere {
+  _and: [Order__cWhere]
+  _or: [Order__cWhere]
+  Id: IDOperator
+  IsDeleted: BooleanOperator
+  Name: StringOperator
+  CreatedDate: DateTimeOperator
+  CreatedById: OrderByEnum
+  LastModifiedDate: DateTimeOperator
+  LastModifiedById: OrderByEnum
+  SystemModstamp: DateTimeOperator
+  LastViewedDate: DateTimeOperator
+  LastReferencedDate: DateTimeOperator
+}
+
+input Product__cWhere {
+  _and: [Product__cWhere]
+  _or: [Product__cWhere]
+  Id: IDOperator
+  IsDeleted: BooleanOperator
+  Name: StringOperator
+  CreatedDate: DateTimeOperator
+  CreatedById: OrderByEnum
+  LastModifiedDate: DateTimeOperator
+  LastModifiedById: OrderByEnum
+  SystemModstamp: DateTimeOperator
+  LastViewedDate: DateTimeOperator
+  LastReferencedDate: DateTimeOperator
+  Autonomy__c: FloatOperator
+  Gender__c: PicklistOperator
+  Picture_URL__c: URLOperator
+  Price__c: CurrencyOperator
+  Product_Family__c: Product_Family__cWhere
+  Suspension__c: BooleanOperator
+}
+
 input FloatOperator {
   _eq: Float
   _neq: Float
@@ -428,9 +438,9 @@ input CurrencyOperator {
   _nin: [Currency]
 }
 
-input Product_Family__cColumnExpr {
-  _and: [Product_Family__cColumnExpr]
-  _or: [Product_Family__cColumnExpr]
+input Product_Family__cWhere {
+  _and: [Product_Family__cWhere]
+  _or: [Product_Family__cWhere]
   Id: IDOperator
   IsDeleted: BooleanOperator
   Name: StringOperator
@@ -442,6 +452,35 @@ input Product_Family__cColumnExpr {
   LastViewedDate: DateTimeOperator
   LastReferencedDate: DateTimeOperator
   Category__c: PicklistOperator
+}
+
+input Order_Item__cOrderBy {
+  Id: OrderByEnum
+  IsDeleted: OrderByEnum
+  Name: OrderByEnum
+  CreatedDate: OrderByEnum
+  CreatedById: OrderByEnum
+  LastModifiedDate: OrderByEnum
+  LastModifiedById: OrderByEnum
+  SystemModstamp: OrderByEnum
+  LastViewedDate: OrderByEnum
+  LastReferencedDate: OrderByEnum
+  Order__c: [Order__cOrderBy]
+  Product__c: [Product__cOrderBy]
+}
+
+input Order__cOrderBy {
+  Id: OrderByEnum
+  OwnerId: OrderByEnum
+  IsDeleted: OrderByEnum
+  Name: OrderByEnum
+  CreatedDate: OrderByEnum
+  CreatedById: OrderByEnum
+  LastModifiedDate: OrderByEnum
+  LastModifiedById: OrderByEnum
+  SystemModstamp: OrderByEnum
+  LastViewedDate: OrderByEnum
+  LastReferencedDate: OrderByEnum
 }
 
 input Product__cOrderBy {
@@ -479,64 +518,61 @@ input Product_Family__cOrderBy {
   Category__c: OrderByEnum
 }
 
-input Order_Item__cColumnExpr {
-  _and: [Order_Item__cColumnExpr]
-  _or: [Order_Item__cColumnExpr]
-  Id: IDOperator
-  IsDeleted: BooleanOperator
-  Name: StringOperator
-  CreatedDate: DateTimeOperator
-  CreatedById: OrderByEnum
-  LastModifiedDate: DateTimeOperator
-  LastModifiedById: OrderByEnum
-  SystemModstamp: DateTimeOperator
-  LastViewedDate: DateTimeOperator
-  LastReferencedDate: DateTimeOperator
-  Order__c: Order__cColumnExpr
-  Product__c: Product__cColumnExpr
+type Product_Family__c implements Entity {
+  Id: ID!
+  OwnerId: ID!
+  IsDeleted: Boolean!
+  Name: String
+  CreatedDate: DateTime!
+  CreatedById: ID!
+  LastModifiedDate: DateTime!
+  LastModifiedById: ID!
+  SystemModstamp: DateTime!
+  LastViewedDate: DateTime
+  LastReferencedDate: DateTime
+  Category__c: Picklist
+  Description__c: TextArea
+  Products__r(limit: Int!, offset: Int, where: Product__cWhere, order_by: [Product__cOrderBy]): [Product__c]
 }
 
-input Order__cColumnExpr {
-  _and: [Order__cColumnExpr]
-  _or: [Order__cColumnExpr]
-  Id: IDOperator
-  IsDeleted: BooleanOperator
-  Name: StringOperator
-  CreatedDate: DateTimeOperator
-  CreatedById: OrderByEnum
-  LastModifiedDate: DateTimeOperator
-  LastModifiedById: OrderByEnum
-  SystemModstamp: DateTimeOperator
-  LastViewedDate: DateTimeOperator
-  LastReferencedDate: DateTimeOperator
+type Order_Item__c implements Entity {
+  Id: ID!
+  IsDeleted: Boolean!
+  Name: String!
+  CreatedDate: DateTime!
+  CreatedById: ID!
+  LastModifiedDate: DateTime!
+  LastModifiedById: ID!
+  SystemModstamp: DateTime!
+  LastViewedDate: DateTime
+  LastReferencedDate: DateTime
+  Order__c: Order__c!
+  Product__c: Product__c!
 }
 
-input Order_Item__cOrderBy {
-  Id: OrderByEnum
-  IsDeleted: OrderByEnum
-  Name: OrderByEnum
-  CreatedDate: OrderByEnum
-  CreatedById: OrderByEnum
-  LastModifiedDate: OrderByEnum
-  LastModifiedById: OrderByEnum
-  SystemModstamp: OrderByEnum
-  LastViewedDate: OrderByEnum
-  LastReferencedDate: OrderByEnum
-  Order__c: [Order__cOrderBy]
-  Product__c: [Product__cOrderBy]
+type Order__c implements Entity {
+  Id: ID!
+  OwnerId: ID!
+  IsDeleted: Boolean!
+  Name: String!
+  CreatedDate: DateTime!
+  CreatedById: ID!
+  LastModifiedDate: DateTime!
+  LastModifiedById: ID!
+  SystemModstamp: DateTime!
+  LastViewedDate: DateTime
+  LastReferencedDate: DateTime
+  Order_Items__r(limit: Int!, offset: Int, where: Order_Item__cWhere, order_by: [Order_Item__cOrderBy]): [Order_Item__c]
 }
 
-input Order__cOrderBy {
-  Id: OrderByEnum
-  OwnerId: OrderByEnum
-  IsDeleted: OrderByEnum
-  Name: OrderByEnum
-  CreatedDate: OrderByEnum
-  CreatedById: OrderByEnum
-  LastModifiedDate: OrderByEnum
-  LastModifiedById: OrderByEnum
-  SystemModstamp: OrderByEnum
-  LastViewedDate: OrderByEnum
-  LastReferencedDate: OrderByEnum
+type Query {
+  Product__c(limit: Int!, offset: Int, where: Product__cWhere, order_by: [Product__cOrderBy]): [Product__c]
+  Product__c_by_id(id: ID): Product__c
+  Product_Family__c(limit: Int!, offset: Int, where: Product_Family__cWhere, order_by: [Product_Family__cOrderBy]): [Product_Family__c]
+  Product_Family__c_by_id(id: ID): Product_Family__c
+  Order_Item__c(limit: Int!, offset: Int, where: Order_Item__cWhere, order_by: [Order_Item__cOrderBy]): [Order_Item__c]
+  Order_Item__c_by_id(id: ID): Order_Item__c
+  Order__c(limit: Int!, offset: Int, where: Order__cWhere, order_by: [Order__cOrderBy]): [Order__c]
+  Order__c_by_id(id: ID): Order__c
 }"
 `;

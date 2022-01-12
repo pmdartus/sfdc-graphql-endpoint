@@ -61,6 +61,20 @@ query getProductById($id: ID!) {
 }
 ```
 
+```gql
+# Find all the orders and products associated with those orders
+{
+    Order__c(limit: 10) {
+        Order_Items__r(limit: 10, order_by: { Name: DESC }) {
+            Product__c {
+                Name
+                Price__c
+            }
+        }
+    }
+}
+```
+
 ## Design details
 
 When invoked for the first time the GraphQL endpoint retrieves the org entities metadata using the [describeSObject](https://developer.salesforce.com/docs/atlas.en-us.234.0.api.meta/api/sforce_api_calls_describesobjects_describesobjectresult.htm) rest API. A GraphQL schema is created based on the entities' shapes. Each SObject is represented by a GraphQL object type in the schema. The schema exposes 2 entry points per entity: `<Entity_name>` to retrieve a list of records and `<Entity_name>_by_id` to retrieve a single record. This generated GraphQL schema can be queried by a [GraphQL introspection query](https://graphql.org/learn/introspection/).
@@ -70,7 +84,7 @@ For performance reasons, GraphQL queries are turned into a single SOQL query. Th
 ### Available features
 
 -   Schema generation from SObject metadata
--   Lookups and Master-Details relationships traversal
+-   Lookups, Master-Detail and Children relationships traversal
 -   Query single record by id
 -   Query multiple records
     -   Simple field and relationship filtering (`where` argument)
@@ -82,7 +96,6 @@ For performance reasons, GraphQL queries are turned into a single SOQL query. Th
 
 -   Authentication
 -   Multi-org / multi-tenant
--   Child relationships traversal
 -   Polymorphic relationships
 -   Mutation requests
 -   [Relay compliant](https://relay.dev/docs/guides/graphql-server-specification/) GraphQL schema

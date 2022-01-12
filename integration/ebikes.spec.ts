@@ -241,4 +241,25 @@ describe('eBikes entity', () => {
             expect(product).toEqual(productList[0]);
         });
     });
+
+    describe('get orders', () => {
+        test('retrieve products associated with order items', async () => {
+            const { data } = await executeQuery({
+                app,
+                query: gql`
+                    {
+                        Order__c(limit: 10) {
+                            Order_Items__r(limit: 10, order_by: { Name: DESC }) {
+                                Product__c {
+                                    Name
+                                    Price__c
+                                }
+                            }
+                        }
+                    }
+                `,
+            });
+            expect(data).toMatchSnapshot();
+        });
+    });
 });

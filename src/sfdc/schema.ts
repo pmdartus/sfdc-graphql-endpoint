@@ -18,7 +18,8 @@ export interface Entity {
 
 export interface ChildRelationship {
     name: string;
-    entity: string;
+    field: string;
+    entity: Entity | undefined;
 }
 
 export interface EntityConfig {
@@ -214,7 +215,9 @@ function createField(schema: SfdcSchema, sObjectField: SObjectField): Field | un
                 type: FieldType.POLYMORPHIC_REFERENCE,
                 ...baseReferenceField,
                 get referencedEntities() {
-                    return sObjectField.referenceTo.map(entityName => schema.entities[entityName])
+                    return sObjectField.referenceTo.map(
+                        (entityName) => schema.entities[entityName],
+                    );
                 },
             };
         } else {
@@ -222,7 +225,7 @@ function createField(schema: SfdcSchema, sObjectField: SObjectField): Field | un
                 type: FieldType.REFERENCE,
                 ...baseReferenceField,
                 get referencedEntity() {
-                    return schema.entities[sObjectField.referenceTo[0]]
+                    return schema.entities[sObjectField.referenceTo[0]];
                 },
             };
         }
@@ -244,13 +247,18 @@ function createChildRelationShip(
     schema: SfdcSchema,
     relationship: SObjectChildRelationship,
 ): ChildRelationship | undefined {
-    if (relationship.relationshipName === null) {
+    const { relationshipName, field, childSObject } = relationship;
+
+    if (relationshipName === null) {
         return;
     }
 
     return {
-        name: relationship.relationshipName,
-        entity: relationship.childSObject,
+        name: relationshipName,
+        field,
+        get entity() {
+            return schema.entities[childSObject];
+        },
     };
 }
 
