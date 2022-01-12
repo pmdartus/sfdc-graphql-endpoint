@@ -11,6 +11,8 @@ import {
     assertObjectType,
     FragmentSpreadNode,
     InlineFragmentNode,
+    getNamedType,
+    GraphQLOutputType,
 } from 'graphql';
 
 import { Api } from '../sfdc/api.js';
@@ -131,38 +133,36 @@ export const resolvers: Resolvers<ResolverContext> = {
         sfdcSchema: SfdcSchema,
     ): GraphQLFieldResolver<unknown, ResolverContext> {
         return async (_, args, context, info) => {
-            try {
-                const { api, logger } = context;
-                const objectType = info.parentType;
+            const { api, logger } = context;
+            const { parentType } = info;
 
-                const fieldType = objectType.getFields()[info.fieldName];
-                const fieldNode = info.fieldNodes.find(
-                    (field) => field.name.value === info.fieldName,
-                )!;
+            const fieldType = parentType.getFields()[info.fieldName];
+            const fieldAstNode = info.fieldNodes.find(
+                (field) => field.name.value === info.fieldName,
+            )!;
 
-                const selects = resolveSelection(
-                    info,
-                    entity,
-                    objectType,
-                    sfdcSchema,
-                    info.fieldNodes[0].selectionSet!,
-                );
+            const objectType = unwrapObjectType(fieldType.type);
+            const selects = resolveSelection(
+                info,
+                entity,
+                objectType,
+                sfdcSchema,
+                info.fieldNodes[0].selectionSet!,
+            );
 
-                const soqlArgs = resolveQueryManyArgs(info, entity, fieldType, fieldNode);
+            const soqlArgs = resolveQueryManyArgs(info, entity, fieldType, fieldAstNode);
 
-                const query = queryToString({
-                    selects,
-                    table: entity.name,
-                    ...soqlArgs,
-                });
+            const query = queryToString({
+                selects,
+                table: entity.name,
+                ...soqlArgs,
+            });
 
-                logger?.debug(`Execute SOQL: ${query}`);
-                const result = await api.executeSOQL(query);
+            
+            logger?.debug(`Execute SOQL: ${query}`);
+            const result = await api.executeSOQL(query);
 
-                return result.records;
-            } catch (error) {
-                console.error(error);
-            }
+            return result.records;
         };
     },
 };
@@ -171,15 +171,15 @@ function resolveQueryManyArgs(
     info: GraphQLResolveInfo,
     entity: Entity,
     fieldType: GraphQLField<unknown, ResolverContext>,
-    fieldNode: FieldNode,
+    fieldAstNode: FieldNode,
 ): SOQLQueryOptionals {
     const res: SOQLQueryOptionals = {};
 
-    if (!fieldNode.arguments) {
+    if (!fieldAstNode.arguments) {
         return res;
     }
 
-    for (const argNode of fieldNode.arguments) {
+    for (const argNode of fieldAstNode.arguments) {
         const argName = argNode.name.value;
         const argType = fieldType.args.find((argType) => argType.name === argName)!;
 
@@ -404,7 +404,9 @@ function resolveFieldSelection(
 ): SOQLSelect | undefined {
     const fieldName = selection.name.value;
 
-    // Ignore meta fields.
+    // Ignore GraphQL [meta fields](https://graphql.org/learn/queries/#meta-fields) in the SOQL
+    // generation.
+    // TODO: This will certainly have to change when adding support for polymorphic relationships.
     if (fieldName.startsWith('__')) {
         return;
     }
@@ -424,7 +426,7 @@ function resolveFieldSelection(
             };
         } else if (isReferenceField(entityField) && selection.selectionSet) {
             const referenceEntity = entityField.referencedEntity!;
-            const referenceObjectType = assertObjectType(fieldType.type);
+            const referenceObjectType = unwrapObjectType(fieldType.type);
 
             const selects = resolveSelection(
                 info,
@@ -444,7 +446,7 @@ function resolveFieldSelection(
         }
     } else if (entityRelationship) {
         const relationshipEntity = entityRelationship.entity!;
-        const relationshipType = assertObjectType(fieldType.type);
+        const relationshipType = unwrapObjectType(fieldType.type);
 
         const selects = resolveSelection(
             info,
@@ -513,4 +515,12 @@ function resolveFragmentSelection(
         sfdcSchema,
         fragment.selectionSet,
     );
+}
+
+/** 
+ * Takes a potentially wrapped GraphQL output type (non-nullable and/or list) and return the 
+ * underlying named type 
+ */
+function unwrapObjectType(_type: GraphQLOutputType): GraphQLObjectType {
+    return assertObjectType(getNamedType(_type));
 }

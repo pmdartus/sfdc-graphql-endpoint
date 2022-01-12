@@ -2,7 +2,30 @@
 
 exports[`eBikes entity get orders retrieve products associated with order items 1`] = `
 Object {
-  "Order__c": null,
+  "Order__c": Array [
+    Object {
+      "Order_Items__r": Array [
+        Object {
+          "Product__c": Object {
+            "Name": "Rolling Mountain - Male",
+            "Price__c": 2300,
+          },
+        },
+        Object {
+          "Product__c": Object {
+            "Name": "Neomov - Basic",
+            "Price__c": 1450,
+          },
+        },
+        Object {
+          "Product__c": Object {
+            "Name": "Wisper foldable - Upgraded",
+            "Price__c": 1230,
+          },
+        },
+      ],
+    },
+  ],
 }
 `;
 

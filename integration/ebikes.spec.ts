@@ -243,13 +243,13 @@ describe('eBikes entity', () => {
     });
 
     describe('get orders', () => {
-        test.only('retrieve products associated with order items', async () => {
+        test('retrieve products associated with order items', async () => {
             const { data } = await executeQuery({
                 app,
                 query: gql`
                     {
                         Order__c(limit: 10) {
-                            Order_Items__r(limit: 10) {
+                            Order_Items__r(limit: 10, order_by: { Name: DESC }) {
                                 Product__c {
                                     Name
                                     Price__c

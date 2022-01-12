@@ -24,6 +24,7 @@ import {
     ScalarField,
     SfdcSchema,
 } from '../sfdc/schema.js';
+import { SOQLRecord, SOQLResult } from '../sfdc/types/soql';
 
 import { getScalarType, getScalarInputType, entityInterfaceType, orderByEnumType } from './types';
 
@@ -100,9 +101,9 @@ function createGraphQLEntityType(ctx: SchemaGenerationContext, entity: Entity): 
 function createGraphQLEntityField(
     ctx: SchemaGenerationContext,
     field: Field,
-): GraphQLFieldConfig<unknown, unknown> {
+): GraphQLFieldConfig<SOQLRecord, unknown> {
     let type: GraphQLOutputType;
-    let resolve: GraphQLFieldResolver<any, unknown> = (source) => {
+    let resolve: GraphQLFieldResolver<SOQLRecord, unknown> = (source) => {
         return source[field.name];
     };
 
@@ -137,8 +138,8 @@ function createGraphQLEntityField(
 function createGraphQLEntityRelationships(
     ctx: SchemaGenerationContext,
     relationship: ChildRelationship,
-): GraphQLFieldConfig<unknown, unknown> | undefined {
-    const { entity } = relationship;
+): GraphQLFieldConfig<SOQLRecord, unknown> | undefined {
+    const { name: relationshipName, entity } = relationship;
 
     // Ignore all the children relationships that aren't part of the SFDC graph. While it's possible
     // to produce all the children relationships, it would bloat the schema.
@@ -152,6 +153,10 @@ function createGraphQLEntityRelationships(
     return {
         args,
         type: new GraphQLList(type),
+        resolve(source: SOQLRecord) {
+            const subQueryResults = source[relationshipName] as SOQLResult;
+            return subQueryResults.records;
+        }
     };
 }
 
