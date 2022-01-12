@@ -7,6 +7,10 @@ import {
     FieldNode,
     valueFromAST,
     GraphQLField,
+    GraphQLObjectType,
+    assertObjectType,
+    FragmentSpreadNode,
+    InlineFragmentNode,
 } from 'graphql';
 
 import { GraphQLSortOrderValue } from './graphql.js';
@@ -26,7 +30,7 @@ import {
     SOQLConditionExpr,
     SOQLConditionExprType,
     SOQLFieldExpr,
-    SoqlFieldType,
+    SOQLFieldType,
     SOQLLogicalOperator,
     SOQLOrderByItem,
     SOQLQuery,
@@ -94,10 +98,12 @@ export const soqlResolvers = {
     query(entity: Entity, sfdcSchema: SfdcSchema): GraphQLFieldResolver<unknown, ResolverContext> {
         return async (_, args, context, info) => {
             const { api, logger } = context;
+            const objectType = info.parentType;
 
             const selects = resolveSelection(
                 info,
                 entity,
+                objectType,
                 sfdcSchema,
                 info.fieldNodes[0].selectionSet!,
             );
@@ -124,30 +130,38 @@ export const soqlResolvers = {
         sfdcSchema: SfdcSchema,
     ): GraphQLFieldResolver<unknown, ResolverContext> {
         return async (_, args, context, info) => {
-            const { api, logger } = context;
+            try {
+                const { api, logger } = context;
+                const objectType = info.parentType;
 
-            const fieldType = info.parentType.getFields()[info.fieldName];
-            const fieldNode = info.fieldNodes.find((field) => field.name.value === info.fieldName)!;
+                const fieldType = objectType.getFields()[info.fieldName];
+                const fieldNode = info.fieldNodes.find(
+                    (field) => field.name.value === info.fieldName,
+                )!;
 
-            const selects = resolveSelection(
-                info,
-                entity,
-                sfdcSchema,
-                info.fieldNodes[0].selectionSet!,
-            );
+                const selects = resolveSelection(
+                    info,
+                    entity,
+                    objectType,
+                    sfdcSchema,
+                    info.fieldNodes[0].selectionSet!,
+                );
 
-            const soqlConfig = resolveQueryManyArgs(info, entity, fieldType, fieldNode);
+                const soqlArgs = resolveQueryManyArgs(info, entity, fieldType, fieldNode);
 
-            const query = queryToString({
-                selects,
-                table: entity.name,
-                ...soqlConfig,
-            });
+                const query = queryToString({
+                    selects,
+                    table: entity.name,
+                    ...soqlArgs,
+                });
 
-            logger?.debug(`Execute SOQL: ${query}`);
-            const result = await api.executeSOQL(query);
+                logger?.debug(`Execute SOQL: ${query}`);
+                const result = await api.executeSOQL(query);
 
-            return result.records;
+                return result.records;
+            } catch (error) {
+                console.error(error);
+            }
         };
     },
 };
@@ -192,7 +206,7 @@ function resolveQueryManyArgs(
             }
 
             default:
-                throw new Error(`Unknown argument name ${argName}`);
+                assert.fail(`Unknown argument name ${argName}`);
         }
     }
 
@@ -247,40 +261,50 @@ function resolveWhereExpr(
 
         for (const [fieldName, fieldValue] of Object.entries(whereValue)) {
             const entityField = entity.fields.find((field) => field.name === fieldName);
-            assert(entityField, `Can't find field ${fieldName} on ${entity.name}`);
+            const entityRelationship = entity.childRelationships.find(
+                (relation) => relation.name === fieldName,
+            );
 
-            if (isScalarField(entityField)) {
-                const soqlFieldExprs = Object.entries(fieldValue).map(
-                    ([operationName, value]): SOQLFieldExpr => {
-                        const operator =
-                            GRAPHQL_COMP_OPERATOR_SOQL_MAPPING[
-                                operationName as keyof WhereFieldValue
-                            ];
+            if (entityField) {
+                if (isScalarField(entityField)) {
+                    const soqlFieldExprs = Object.entries(fieldValue).map(
+                        ([operationName, value]): SOQLFieldExpr => {
+                            const operator =
+                                GRAPHQL_COMP_OPERATOR_SOQL_MAPPING[
+                                    operationName as keyof WhereFieldValue
+                                ];
 
-                        return {
-                            type: SOQLConditionExprType.FIELD_EXPR,
-                            field: columnPrefix + entityField.name,
-                            operator,
-                            value,
-                        };
-                    },
-                );
-                exprs.push(...soqlFieldExprs);
-            } else {
-                if (isReferenceField(entityField)) {
-                    const expr = resolveWhereExpr(
-                        info,
-                        entityField.referencedEntity!,
-                        fieldValue as WhereValue,
-                        `${entityField.relationshipName}.`,
+                            return {
+                                type: SOQLConditionExprType.FIELD_EXPR,
+                                field: columnPrefix + entityField.name,
+                                operator,
+                                value,
+                            };
+                        },
                     );
-
-                    if (expr) {
-                        exprs.push(expr);
-                    }
+                    exprs.push(...soqlFieldExprs);
                 } else {
-                    // TODO: Handle polymorphic relationships.
+                    if (isReferenceField(entityField)) {
+                        const expr = resolveWhereExpr(
+                            info,
+                            entityField.referencedEntity!,
+                            fieldValue as WhereValue,
+                            `${entityField.relationshipName}.`,
+                        );
+
+                        if (expr) {
+                            exprs.push(expr);
+                        }
+                    } else {
+                        // TODO: Handle polymorphic relationships.
+                    }
                 }
+            } else if (entityRelationship) {
+                console.log(entityRelationship);
+            } else {
+                assert.fail(
+                    `Can't find field or relationship named "${fieldName}" on "${entity.name}"`,
+                );
             }
         }
 
@@ -324,74 +348,44 @@ function resolveOrderBy(
 function resolveSelection(
     info: GraphQLResolveInfo,
     entity: Entity,
+    objectType: GraphQLObjectType,
     sfdcSchema: SfdcSchema,
     selectionSet: SelectionSetNode,
 ): SOQLSelect[] {
-    const { fragments } = info;
     const soqlSelects: SOQLSelect[] = [];
 
     for (const selection of selectionSet.selections) {
         switch (selection.kind) {
             case Kind.FIELD: {
-                // Ignore meta fields.
-                if (isMetaField(selection)) {
-                    break;
-                }
-
-                const entityField = entity.fields.find(
-                    (entity) => entity.name === selection.name.value,
+                const select = resolveFieldSelection(
+                    info,
+                    entity,
+                    objectType,
+                    sfdcSchema,
+                    selection,
                 );
-                assert(entityField, `Can't find field ${selection.name.value} on ${entity.name}`);
 
-                if (isScalarField(entityField)) {
-                    soqlSelects.push({
-                        type: SoqlFieldType.FIELD,
-                        name: entityField.name,
-                    });
-                } else if (isReferenceField(entityField) && selection.selectionSet) {
-                    soqlSelects.push({
-                        type: SoqlFieldType.REFERENCE,
-                        name: entityField.relationshipName,
-                        selects: resolveSelection(
-                            info,
-                            entityField.referencedEntity!,
-                            sfdcSchema,
-                            selection.selectionSet,
-                        ),
-                    });
-                } else if (isPolymorphicReference(entityField) && selection.selectionSet) {
-                    // TODO: Handle polymorphic relationships.
+                if (select !== undefined) {
+                    soqlSelects.push(select);
                 }
                 break;
             }
 
             case Kind.INLINE_FRAGMENT: {
-                let fragmentEntity = entity;
-                if (selection.typeCondition) {
-                    fragmentEntity = sfdcSchema.entities[selection.typeCondition.name.value];
-                }
-
-                const fragmentSelects = resolveSelection(
-                    info,
-                    fragmentEntity,
-                    sfdcSchema,
-                    selection.selectionSet,
+                soqlSelects.push(
+                    ...resolveInlineFragmentSelection(
+                        info,
+                        entity,
+                        objectType,
+                        sfdcSchema,
+                        selection,
+                    ),
                 );
-                soqlSelects.push(...fragmentSelects);
                 break;
             }
 
             case Kind.FRAGMENT_SPREAD: {
-                const fragment = fragments[selection.name.value];
-                const fragmentEntity = sfdcSchema.entities[fragment.typeCondition.name.value];
-
-                const fragmentSelects = resolveSelection(
-                    info,
-                    fragmentEntity,
-                    sfdcSchema,
-                    fragment.selectionSet,
-                );
-                soqlSelects.push(...fragmentSelects);
+                soqlSelects.push(...resolveFragmentSelection(info, sfdcSchema, selection));
                 break;
             }
         }
@@ -400,6 +394,122 @@ function resolveSelection(
     return soqlSelects;
 }
 
-function isMetaField(fieldNode: FieldNode): boolean {
-    return fieldNode.name.value.startsWith('__');
+function resolveFieldSelection(
+    info: GraphQLResolveInfo,
+    entity: Entity,
+    objectType: GraphQLObjectType<any, any>,
+    sfdcSchema: SfdcSchema,
+    selection: FieldNode,
+): SOQLSelect | undefined {
+    const fieldName = selection.name.value;
+
+    // Ignore meta fields.
+    if (fieldName.startsWith('__')) {
+        return;
+    }
+
+    const fieldType = objectType.getFields()[fieldName];
+
+    const entityField = entity.fields.find((entity) => entity.name === fieldName);
+    const entityRelationship = entity.childRelationships.find(
+        (relation) => relation.name === fieldName,
+    );
+
+    if (entityField) {
+        if (isScalarField(entityField)) {
+            return {
+                type: SOQLFieldType.FIELD,
+                name: entityField.name,
+            };
+        } else if (isReferenceField(entityField) && selection.selectionSet) {
+            const referenceEntity = entityField.referencedEntity!;
+            const referenceObjectType = assertObjectType(fieldType.type);
+
+            const selects = resolveSelection(
+                info,
+                referenceEntity,
+                referenceObjectType,
+                sfdcSchema,
+                selection.selectionSet,
+            );
+
+            return {
+                type: SOQLFieldType.REFERENCE,
+                name: entityField.relationshipName,
+                selects,
+            };
+        } else if (isPolymorphicReference(entityField) && selection.selectionSet) {
+            // TODO: Handle polymorphic relationships.
+        }
+    } else if (entityRelationship) {
+        const relationshipEntity = entityRelationship.entity!;
+        const relationshipType = assertObjectType(fieldType.type);
+
+        const selects = resolveSelection(
+            info,
+            relationshipEntity,
+            relationshipType,
+            sfdcSchema,
+            selection.selectionSet!,
+        );
+
+        const queryArgs = resolveQueryManyArgs(info, entity, fieldType, selection);
+
+        return {
+            type: SOQLFieldType.SUB_QUERY,
+            table: entityRelationship.name,
+            selects,
+            ...queryArgs,
+        };
+    } else {
+        assert.fail(`Can't find field or relationship named "${fieldName}" on "${entity.name}"`);
+    }
+}
+
+function resolveInlineFragmentSelection(
+    info: GraphQLResolveInfo,
+    entity: Entity,
+    objectType: GraphQLObjectType<any, any>,
+    sfdcSchema: SfdcSchema,
+    selection: InlineFragmentNode,
+): SOQLSelect[] {
+    let fragmentEntity = entity;
+    let fragmentObjectType = objectType;
+
+    if (selection.typeCondition) {
+        const entityName = selection.typeCondition.name.value;
+
+        fragmentEntity = sfdcSchema.entities[entityName];
+        fragmentObjectType = assertObjectType(info.schema.getType(entityName));
+    }
+
+    return resolveSelection(
+        info,
+        fragmentEntity,
+        fragmentObjectType,
+        sfdcSchema,
+        selection.selectionSet,
+    );
+}
+
+function resolveFragmentSelection(
+    info: GraphQLResolveInfo,
+    sfdcSchema: SfdcSchema,
+    selection: FragmentSpreadNode,
+): SOQLSelect[] {
+    const fragmentName = selection.name.value;
+    const fragment = info.fragments[fragmentName];
+
+    const entityName = fragment.typeCondition.name.value;
+
+    const fragmentEntity = sfdcSchema.entities[entityName];
+    const fragmentObjectType = assertObjectType(info.schema.getType(entityName));
+
+    return resolveSelection(
+        info,
+        fragmentEntity,
+        fragmentObjectType,
+        sfdcSchema,
+        fragment.selectionSet,
+    );
 }

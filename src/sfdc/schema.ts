@@ -18,7 +18,8 @@ export interface Entity {
 
 export interface ChildRelationship {
     name: string;
-    entity: string;
+    field: string;
+    entity: Entity | undefined;
 }
 
 export interface EntityConfig {
@@ -244,13 +245,18 @@ function createChildRelationShip(
     schema: SfdcSchema,
     relationship: SObjectChildRelationship,
 ): ChildRelationship | undefined {
-    if (relationship.relationshipName === null) {
+    const { relationshipName, field, childSObject, } = relationship;
+
+    if (relationshipName === null) {
         return;
     }
 
     return {
-        name: relationship.relationshipName,
-        entity: relationship.childSObject,
+        name: relationshipName,
+        field,
+        get entity() {
+            return schema.entities[childSObject];
+        }
     };
 }
 

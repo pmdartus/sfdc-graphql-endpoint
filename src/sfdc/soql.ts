@@ -7,22 +7,27 @@ export interface SOQLQuery {
     offset?: number;
 }
 
-export type SOQLSelect = SOQLFieldSelect | SOQLReferenceSelect;
+export type SOQLSelect = SOQLFieldSelect | SOQLReferenceSelect | SOQLSubQuery;
 
-export const enum SoqlFieldType {
+export const enum SOQLFieldType {
     FIELD,
     REFERENCE,
+    SUB_QUERY
 }
 
 export interface SOQLFieldSelect {
-    type: SoqlFieldType.FIELD;
+    type: SOQLFieldType.FIELD;
     name: string;
 }
 
 export interface SOQLReferenceSelect {
-    type: SoqlFieldType.REFERENCE;
+    type: SOQLFieldType.REFERENCE;
     name: string;
     selects: SOQLSelect[];
+}
+
+export interface SOQLSubQuery extends SOQLQuery {
+    type: SOQLFieldType.SUB_QUERY
 }
 
 export type SOQLConditionExpr = SOQLFieldExpr | SOQLLogicalExpr;
@@ -105,10 +110,15 @@ export function queryToString(query: SOQLQuery): string {
 
 function selectsToString(selects: SOQLSelect[], prefix = ''): string[] {
     return selects.flatMap((select) => {
-        if (select.type === SoqlFieldType.FIELD) {
-            return prefix + select.name;
-        } else {
-            return selectsToString(select.selects, `${select.name}.`);
+        switch (select.type) {
+            case SOQLFieldType.FIELD:
+                return prefix + select.name;
+
+            case SOQLFieldType.REFERENCE:
+                return selectsToString(select.selects, `${select.name}.`);
+        
+            case SOQLFieldType.SUB_QUERY:
+                return `(${queryToString(select)})`;
         }
     });
 }

@@ -2,6 +2,7 @@ import {
     GraphQLBoolean,
     GraphQLEnumType,
     GraphQLFieldConfig,
+    GraphQLFieldConfigArgumentMap,
     GraphQLFieldResolver,
     GraphQLFloat,
     GraphQLID,
@@ -20,6 +21,7 @@ import {
 } from 'graphql';
 
 import {
+    ChildRelationship,
     Entity,
     Field,
     FieldType,
@@ -41,22 +43,14 @@ interface SchemaConfig<Context> {
 
 interface State {
     config: SchemaConfig<any>;
-    types: Map<string, GraphQLObjectType>;
-    columnExprTypes: Map<string, GraphQLInputObjectType>;
-    orderByTypes: Map<string, GraphQLList<GraphQLInputObjectType>>;
-}
 
-const ENTITY_INTERFACE = new GraphQLInterfaceType({
-    name: 'Entity',
-    fields: {
-        Id: {
-            type: GraphQLID,
-        },
-        Name: {
-            type: GraphQLString,
-        },
-    },
-});
+    /** Map associating SObject names to GraphQL object types. */
+    entityTypes: Map<string, GraphQLObjectType>;
+    /** Map associating SObject names to GraphQL where predicate object types. */
+    whereTypes: Map<string, GraphQLInputObjectType>;
+    /** Map associating SObject names to GraphQL order by object types. */
+    orderTypes: Map<string, GraphQLList<GraphQLInputObjectType>>;
+}
 
 const SCALAR_TYPES_MAPPING: { [type in ScalarField['type']]: GraphQLScalarType } = {
     // Builtin GraphQL scalars
@@ -86,24 +80,33 @@ const SCALAR_TYPES_MAPPING: { [type in ScalarField['type']]: GraphQLScalarType }
     [FieldType.LOCATION]: new GraphQLScalarType({ name: 'Location' }),
 };
 
+const ENTITY_INTERFACE = new GraphQLInterfaceType({
+    name: 'Entity',
+    fields: {
+        Id: {
+            type: new GraphQLNonNull(GraphQLID),
+        },
+        Name: {
+            type: GraphQLString,
+        },
+        CreatedDate: {
+            type: new GraphQLNonNull(SCALAR_TYPES_MAPPING[FieldType.DATETIME]),
+        },
+        LastModifiedDate: {
+            type: new GraphQLNonNull(SCALAR_TYPES_MAPPING[FieldType.DATETIME]),
+        },
+        SystemModstamp: {
+            type: new GraphQLNonNull(SCALAR_TYPES_MAPPING[FieldType.DATETIME]),
+        },
+        LastViewedDate: {
+            type: SCALAR_TYPES_MAPPING[FieldType.DATETIME],
+        },
+    },
+});
+
 const OPERATOR_INPUT_TYPES_MAPPING = Object.fromEntries(
     Object.entries(SCALAR_TYPES_MAPPING).map(([key, type]) => [key, createInputOperator({ type })]),
 ) as { [type in ScalarField['type']]: GraphQLInputObjectType };
-
-const BY_ID_INPUT_ARGS = {
-    id: {
-        type: GraphQLID,
-    },
-};
-
-const PAGINATION_INPUT_ARGS = {
-    limit: {
-        type: new GraphQLNonNull(GraphQLInt),
-    },
-    offset: {
-        type: GraphQLInt,
-    },
-};
 
 export type GraphQLSortOrderValue =
     | 'ASC'
@@ -130,35 +133,44 @@ const ORDER_BY_ENUM_TYPE = new GraphQLEnumType({
 export function entitiesToSchema<Context>(config: SchemaConfig<Context>): GraphQLSchema {
     const state: State = {
         config,
-        types: new Map(),
-        orderByTypes: new Map(),
-        columnExprTypes: new Map(),
+        entityTypes: new Map(),
+        orderTypes: new Map(),
+        whereTypes: new Map(),
     };
 
     for (const [name, entity] of Object.entries(config.sfdcSchema.entities)) {
         const type = createGraphQLEntityType(state, entity);
-        state.types.set(name, type);
+        state.entityTypes.set(name, type);
     }
 
     const query = createQuery(state);
 
     return new GraphQLSchema({
         query,
-        types: Array.from(state.types.values()),
+        types: Array.from(state.entityTypes.values()),
     });
 }
 
 function createGraphQLEntityType(state: State, entity: Entity): GraphQLObjectType {
-    const { name, fields } = entity;
+    const { name, fields, childRelationships } = entity;
 
     return new GraphQLObjectType({
         name,
-        fields: () => {
-            return Object.fromEntries(
-                fields.map((field) => [field.name, createGraphQLEntityField(state, field)]),
-            );
-        },
         interfaces: [ENTITY_INTERFACE],
+        fields: () => {
+            const graphQLFields = fields.map((field) => [
+                field.name,
+                createGraphQLEntityField(state, field),
+            ]);
+            const graphQLRelationships = childRelationships
+                .map((relationship) => [
+                    relationship.name,
+                    createGraphQLEntityRelationships(state, relationship),
+                ])
+                .filter(([, value]) => value !== undefined);
+
+            return Object.fromEntries([...graphQLFields, ...graphQLRelationships]);
+        },
     });
 }
 
@@ -179,7 +191,7 @@ function createGraphQLEntityField(
         if (!referencedEntity) {
             type = GraphQLID;
         } else {
-            type = state.types.get(referencedEntity.name)!;
+            type = state.entityTypes.get(referencedEntity.name)!;
             resolve = (source) => {
                 return source[field.relationshipName];
             };
@@ -196,6 +208,27 @@ function createGraphQLEntityField(
     return {
         type,
         resolve,
+    };
+}
+
+function createGraphQLEntityRelationships(
+    state: State,
+    relationship: ChildRelationship,
+): GraphQLFieldConfig<unknown, unknown> | undefined {
+    const { entity } = relationship;
+
+    // Ignore all the children relationships that aren't part of the SFDC graph. While it's possible
+    // to produce all the children relationships, it would bloat the schema.
+    if (!entity) {
+        return;
+    }
+
+    const type = state.entityTypes.get(entity.name)!;
+    const args = createEntityListArgs(state, entity);
+
+    return {
+        args,
+        type: new GraphQLList(type),
     };
 }
 
@@ -221,94 +254,137 @@ function createEntityQueries(
     const { name } = entity;
     const { resolvers, sfdcSchema } = state.config;
 
-    const type = state.types.get(name)!;
+    const type = state.entityTypes.get(name)!;
 
-    const orderByInputType = new GraphQLList(
-        new GraphQLInputObjectType({
-            name: `${name}OrderBy`,
-            fields: () => Object.fromEntries(
-                entity.fields
-                    .filter((field) => field.config.sortable)
-                    .map((field) => {
-                        let type: GraphQLInputType = ORDER_BY_ENUM_TYPE;
-                        if (isReferenceField(field) && field.referencedEntity) {
-                            type = state.orderByTypes.get(field.referencedEntity.name)!;
-                        }
-
-                        return [
-                            field.name,
-                            {
-                                type,
-                            },
-                        ];
-                    }),
-            ),
-        }),
-    );
-    state.orderByTypes.set(name, orderByInputType);
-
-    const columnExprInputType: GraphQLInputObjectType = new GraphQLInputObjectType({
-        name: `${name}ColumnExpr`,
-        fields: () => {
-            return {
-                _and: {
-                    type: new GraphQLList(columnExprInputType),
-                },
-                _or: {
-                    type: new GraphQLList(columnExprInputType),
-                },
-                ...Object.fromEntries(
-                    entity.fields
-                        .filter(
-                            (field): field is ScalarField | ReferenceField =>
-                                field.config.filterable && !isPolymorphicReference(field),
-                        )
-                        .map((field) => {
-                            let type: GraphQLInputType;
-
-                            if (isScalarField(field)) {
-                                type = OPERATOR_INPUT_TYPES_MAPPING[field.type];
-                            } else if (isReferenceField(field)) {
-                                if (field.referencedEntity) {
-                                    type = state.columnExprTypes.get(field.referencedEntity.name)!;
-                                } else {
-                                    type = ORDER_BY_ENUM_TYPE;
-                                }
-                            }
-
-                            return [
-                                field.name,
-                                {
-                                    type: type!,
-                                },
-                            ];
-                        }),
-                ),
-            };
+    const queryManyArgs = createEntityListArgs(state, entity);
+    const querySingleArgs = {
+        id: {
+            type: GraphQLID,
         },
-    });
-    state.columnExprTypes.set(name, columnExprInputType);
+    };
 
     return {
         [name]: {
-            args: {
-                ...PAGINATION_INPUT_ARGS,
-                where: {
-                    type: columnExprInputType,
-                },
-                order_by: {
-                    type: orderByInputType,
-                },
-            },
+            args: queryManyArgs,
             type: new GraphQLList(type),
             resolve: resolvers?.queryMany?.(entity, sfdcSchema),
         },
         [`${name}_by_id`]: {
-            args: BY_ID_INPUT_ARGS,
+            args: querySingleArgs,
             type: type,
             resolve: resolvers?.query?.(entity, sfdcSchema),
         },
     };
+}
+
+function createEntityListArgs(state: State, entity: Entity): GraphQLFieldConfigArgumentMap {
+    const whereInputType = getWhereInputType(state, entity);
+    const orderByInputType = getOderByInputType(state, entity);
+
+    return {
+        limit: {
+            type: new GraphQLNonNull(GraphQLInt),
+        },
+        offset: {
+            type: GraphQLInt,
+        },
+        where: {
+            type: whereInputType,
+        },
+        order_by: {
+            type: orderByInputType,
+        },
+    };
+}
+
+function getOderByInputType(state: State, entity: Entity): GraphQLInputType {
+    const { name, fields } = entity;
+    let orderByInputType = state.orderTypes.get(name);
+
+    if (orderByInputType === undefined) {
+        orderByInputType = new GraphQLList(
+            new GraphQLInputObjectType({
+                name: `${name}OrderBy`,
+                fields: () =>
+                    Object.fromEntries(
+                        fields
+                            .filter((field) => field.config.sortable)
+                            .map((field) => {
+                                let type: GraphQLInputType = ORDER_BY_ENUM_TYPE;
+                                if (isReferenceField(field) && field.referencedEntity) {
+                                    type = getOderByInputType(state, field.referencedEntity);
+                                }
+
+                                return [
+                                    field.name,
+                                    {
+                                        type,
+                                    },
+                                ];
+                            }),
+                    ),
+            }),
+        );
+
+        state.orderTypes.set(name, orderByInputType);
+    }
+
+    return orderByInputType;
+}
+
+function getWhereInputType(state: State, entity: Entity): GraphQLInputType {
+    const { name, fields } = entity;
+    let whereInputType = state.whereTypes.get(name);
+
+    if (whereInputType === undefined) {
+        // The type has to be explicitly set here to please TypeScript, otherwise it bails out
+        // because of the recursive reference.
+        const _whereInputType: GraphQLInputObjectType = new GraphQLInputObjectType({
+            name: `${name}Where`,
+            fields: () => {
+                return {
+                    _and: {
+                        type: new GraphQLList(_whereInputType),
+                    },
+                    _or: {
+                        type: new GraphQLList(_whereInputType),
+                    },
+                    ...Object.fromEntries(
+                        fields
+                            .filter(
+                                (field): field is ScalarField | ReferenceField =>
+                                    field.config.filterable && !isPolymorphicReference(field),
+                            )
+                            .map((field) => {
+                                let type: GraphQLInputType;
+
+                                if (isScalarField(field)) {
+                                    type = OPERATOR_INPUT_TYPES_MAPPING[field.type];
+                                } else if (isReferenceField(field)) {
+                                    if (field.referencedEntity) {
+                                        type = getWhereInputType(state, field.referencedEntity);
+                                    } else {
+                                        type = ORDER_BY_ENUM_TYPE;
+                                    }
+                                }
+
+                                return [
+                                    field.name,
+                                    {
+                                        type: type!,
+                                    },
+                                ];
+                            }),
+                    ),
+                };
+            },
+        });
+
+        whereInputType = _whereInputType;
+        state.whereTypes.set(name, _whereInputType);
+    }
+
+    return whereInputType;
 }
 
 function createInputOperator({ type }: { type: GraphQLScalarType }): GraphQLInputObjectType {
