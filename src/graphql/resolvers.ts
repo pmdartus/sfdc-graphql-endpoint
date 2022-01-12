@@ -13,17 +13,15 @@ import {
     InlineFragmentNode,
 } from 'graphql';
 
-import { GraphQLSortOrderValue } from './graphql.js';
-
-import { Api } from './sfdc/api.js';
-import { Connection } from './sfdc/connection.js';
+import { Api } from '../sfdc/api.js';
+import { Connection } from '../sfdc/connection.js';
 import {
     Entity,
     isPolymorphicReference,
     isReferenceField,
     isScalarField,
     SfdcSchema,
-} from './sfdc/schema.js';
+} from '../sfdc/schema.js';
 import {
     queryToString,
     SOQLComparisonOperator,
@@ -36,9 +34,12 @@ import {
     SOQLQuery,
     SOQLSelect,
     SOQLSortingOrder,
-} from './sfdc/soql.js';
+} from '../sfdc/soql.js';
 
-import { Logger } from './utils/logger.js';
+import { Logger } from '../utils/logger.js';
+
+import { GraphQLSortOrderValue } from './types';
+import { Resolvers } from './schema.js';
 
 export interface ResolverContext {
     connection: Connection;
@@ -94,7 +95,7 @@ const GRAPHQL_COMP_OPERATOR_SOQL_MAPPING: {
     _like: SOQLComparisonOperator.LIKE,
 };
 
-export const soqlResolvers = {
+export const resolvers: Resolvers<ResolverContext> = {
     query(entity: Entity, sfdcSchema: SfdcSchema): GraphQLFieldResolver<unknown, ResolverContext> {
         return async (_, args, context, info) => {
             const { api, logger } = context;
