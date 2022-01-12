@@ -79,7 +79,7 @@ export function graphqlFastifyPlugin(opts: SfdcGraphQLOptions) {
             response: FastifyReply,
             params: GraphQLParams,
         ): Promise<graphql.ExecutionResult> {
-            const { api, connection } = fastify.sfdc;
+            const { api } = fastify.sfdc;
             const { query, variables, operationName } = params;
     
             if (!schema) {
@@ -98,8 +98,6 @@ export function graphqlFastifyPlugin(opts: SfdcGraphQLOptions) {
             const queryDocumentAst = parseAndValidateQuery(schema, query);
             const context: ResolverContext = {
                 api,
-                connection,
-                logger: request.log,
             };
     
             let result: graphql.ExecutionResult;
@@ -111,6 +109,20 @@ export function graphqlFastifyPlugin(opts: SfdcGraphQLOptions) {
                     document: queryDocumentAst,
                     contextValue: context,
                 });
+
+                if (context.soqlQuery) {
+                    fastify.log.debug('Executing SOQL query:', context.soqlQuery);
+
+                    if (request.headers['x-explain-soql']) {
+                        const explain = await api.explainSOQL(context.soqlQuery);
+                        result = {
+                            ...result,
+                            extensions: {
+                                explain,
+                            }
+                        }
+                    }
+                }
             } catch (error: unknown) {
                 throw {
                     statusCode: 400,
@@ -118,7 +130,7 @@ export function graphqlFastifyPlugin(opts: SfdcGraphQLOptions) {
                     graphqlErrors: [error],
                 };
             }
-    
+
             return result;
         }
     

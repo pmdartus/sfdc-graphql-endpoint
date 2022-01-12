@@ -262,4 +262,31 @@ describe('eBikes entity', () => {
             expect(data).toMatchSnapshot();
         });
     });
+
+    describe('SOQL query explanation', () => {
+        test('Setting the "X-Explain-SOQL" should return planning explanation', async () => {
+            const res = await executeQuery({
+                app,
+                query: gql`
+                    {
+                        Product__c(order_by: { Price__c: DESC }, limit: 4) {
+                            Name
+                            Price__c
+                        }
+                    }
+                `,
+                headers: {
+                    'X-Explain-SOQL': 'true',
+                }
+            });
+
+            expect(Array.isArray(res.data.Product__c)).toBe(true);
+            expect(res.extensions).toMatchObject({
+                explain: {
+                    plans: expect.any(Array),
+                    sourceQuery: expect.any(String),
+                }
+            })
+        });
+    });
 });

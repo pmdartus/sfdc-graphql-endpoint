@@ -91,6 +91,7 @@ For performance reasons, GraphQL queries are turned into a single SOQL query. Th
     -   Complex filtering (`_and` and `_or` logical operators)
     -   Limit and offset results (`limit` and `offset` arguments)
     -   Sorting (`order_by` argument)
+- SOQL query plan introspection (via `X-Explain-SOQL` HTTP header)
 
 ### Missing features
 

@@ -25,4 +25,12 @@ export class Api {
             },
         });
     }
+
+    async explainSOQL(query: string): Promise<SOQLResult> {
+        return this.#connection.fetch(`/services/data/${this.#version}/query/`, {
+            searchParams: {
+                explain: query,
+            },
+        });
+    }
 }

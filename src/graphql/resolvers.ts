@@ -38,15 +38,12 @@ import {
     SOQLSortingOrder,
 } from '../sfdc/soql.js';
 
-import { Logger } from '../utils/logger.js';
-
 import { GraphQLSortOrderValue } from './types';
 import { Resolvers } from './schema.js';
 
 export interface ResolverContext {
-    connection: Connection;
-    api: Api;
-    logger?: Logger;
+    readonly api: Api;
+    soqlQuery?: string;
 }
 
 type SOQLQueryOptionals = Pick<SOQLQuery, 'where' | 'orderBy' | 'limit' | 'offset'>;
@@ -100,7 +97,6 @@ const GRAPHQL_COMP_OPERATOR_SOQL_MAPPING: {
 export const resolvers: Resolvers<ResolverContext> = {
     query(entity: Entity, sfdcSchema: SfdcSchema): GraphQLFieldResolver<unknown, ResolverContext> {
         return async (_, args, context, info) => {
-            const { api, logger } = context;
             const objectType = info.parentType;
 
             const selects = resolveSelection(
@@ -111,7 +107,7 @@ export const resolvers: Resolvers<ResolverContext> = {
                 info.fieldNodes[0].selectionSet!,
             );
 
-            const queryString = queryToString({
+            const query = queryToString({
                 selects,
                 table: entity.name,
                 where: {
@@ -122,9 +118,9 @@ export const resolvers: Resolvers<ResolverContext> = {
                 },
             });
 
-            logger?.debug(`Execute SOQL: ${queryString}`);
-            const result = await api.executeSOQL(queryString);
+            context.soqlQuery = query;
 
+            const result = await context.api.executeSOQL(query);
             return result.records[0];
         };
     },
@@ -133,7 +129,6 @@ export const resolvers: Resolvers<ResolverContext> = {
         sfdcSchema: SfdcSchema,
     ): GraphQLFieldResolver<unknown, ResolverContext> {
         return async (_, args, context, info) => {
-            const { api, logger } = context;
             const { parentType } = info;
 
             const fieldType = parentType.getFields()[info.fieldName];
@@ -158,10 +153,9 @@ export const resolvers: Resolvers<ResolverContext> = {
                 ...soqlArgs,
             });
 
-            
-            logger?.debug(`Execute SOQL: ${query}`);
-            const result = await api.executeSOQL(query);
+            context.soqlQuery = query;
 
+            const result = await context.api.executeSOQL(query);
             return result.records;
         };
     },

@@ -1,6 +1,7 @@
 import url from 'node:url';
 import path from 'node:path';
 import child_process from 'node:child_process';
+import { IncomingHttpHeaders } from 'node:http';
 
 import { FastifyInstance } from 'fastify';
 
@@ -54,14 +55,17 @@ export async function executeQuery({
     app,
     query,
     variables = {},
+    headers = {},
 }: {
     app: FastifyInstance;
     query: string;
     variables?: Record<string, unknown>
+    headers?: IncomingHttpHeaders
 }): Promise<any> {
     const response = await app.inject({
         method: 'POST',
         url: '/graphql',
+        headers,
         payload: {
             query,
             variables
