@@ -8,8 +8,8 @@ This project is a proof-of-concept exploring how to automatically generate a Gra
 # Retrieve a specific product by id
 query getProductById($id: ID!) {
     Product__c_by_id(id: $id) {
-        id
-        name
+        Id
+        Name
     }
 }
 ```
@@ -17,9 +17,9 @@ query getProductById($id: ID!) {
 ```gql
 # Sorting: Retrieve most expensive products
 {
-    Product__c(order_by: { price__c: DESC }, limit: 5) {
-        name
-        price__c
+    Product__c(order_by: { Price__c: DESC }, limit: 5) {
+        Name
+        Price__c
     }
 }
 ```
@@ -27,9 +27,9 @@ query getProductById($id: ID!) {
 ```gql
 # Range filter: Retrieve products in a specific price range
 {
-    Product__c(where: { price__c: { _gt: 1300, _lt: 1500 } }, order_by: { name: ASC }, limit: 10) {
-        name
-        price__c
+    Product__c(where: { price__c: { _gt: 1300, _lt: 1500 } }, order_by: { Name: ASC }, limit: 10) {
+        Name
+        Price__c
     }
 }
 ```
@@ -37,9 +37,9 @@ query getProductById($id: ID!) {
 ```gql
 # LIKE operator: Retrieve products with matching name
 {
-    Product__c(where: { name: { _like: "Neomov%" } }, order_by: { name: ASC }, limit: 10) {
-        name
-        price__c
+    Product__c(where: { Name: { _like: "Neomov%" } }, order_by: { Name: ASC }, limit: 10) {
+        Name
+        Price__c
     }
 }
 ```
@@ -48,14 +48,14 @@ query getProductById($id: ID!) {
 # Lookup filter: Retrieve products with the specific family name
 {
     Product__c(
-        where: { product_Family__r: { name: { _eq: "Rolling Mountain" } } }
+        where: { Product_Family__rc: { Name: { _eq: "Rolling Mountain" } } }
         order_by: { name: ASC }
         limit: 10
     ) {
-        name
-        price__c
-        product_Family__r {
-            name
+        Name
+        Price__c
+        Product_Family__c {
+            Name
         }
     }
 }
