@@ -24,9 +24,9 @@ import {
     ScalarField,
     SfdcSchema,
 } from '../sfdc/schema.js';
-import { SOQLRecord, SOQLResult } from '../sfdc/types/soql';
+import { SOQLRecord, SOQLResult } from '../sfdc/types/soql.js';
 
-import { getScalarType, getScalarInputType, entityInterfaceType, orderByEnumType } from './types';
+import { getScalarType, getScalarInputType, entityInterfaceType, orderByEnumType } from './types.js';
 
 export interface Resolvers<ExecContext> {
     query?: (entity: Entity, schema: SfdcSchema) => GraphQLFieldResolver<unknown, ExecContext>;

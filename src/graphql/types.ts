@@ -108,9 +108,6 @@ export const entityInterfaceType = new GraphQLInterfaceType({
         SystemModstamp: {
             type: new GraphQLNonNull(SCALAR_TYPES[FieldType.DATETIME]),
         },
-        LastViewedDate: {
-            type: SCALAR_TYPES[FieldType.DATETIME],
-        },
     },
 });
 
